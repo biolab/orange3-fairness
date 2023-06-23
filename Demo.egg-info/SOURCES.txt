@@ -6,6 +6,7 @@ Demo.egg-info/entry_points.txt
 Demo.egg-info/top_level.txt
 orangedemo/OWAdder.py
 orangedemo/OWAsFairness.py
+orangedemo/OWAsFairnessHard.py
 orangedemo/OWDataSamplerA.py
 orangedemo/OWInOut.py
 orangedemo/OWIntNumber.py

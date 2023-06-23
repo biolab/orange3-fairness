@@ -1,0 +1,14 @@
+setup.py
+Demo.egg-info/PKG-INFO
+Demo.egg-info/SOURCES.txt
+Demo.egg-info/dependency_links.txt
+Demo.egg-info/entry_points.txt
+Demo.egg-info/top_level.txt
+orangedemo/OWAdder.py
+orangedemo/OWAsFairness.py
+orangedemo/OWDataSamplerA.py
+orangedemo/OWInOut.py
+orangedemo/OWIntNumber.py
+orangedemo/OWPrint.py
+orangedemo/__init__.py
+orangedemo/icons/DataSamplerA.svg

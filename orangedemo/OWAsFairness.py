@@ -7,7 +7,7 @@ from Orange.widgets import gui
 from Orange.widgets.settings import Setting, ContextSetting, DomainContextHandler
 from Orange.widgets.widget import Input, Output, OWWidget
 from Orange.widgets.utils.itemmodels import DomainModel, PyListModel
-from Orange.data import Table, Domain, ContinuousVariable
+from Orange.data import Table, Domain, ContinuousVariable, DiscreteVariable
 
 class OWAsFairness(OWWidget):
     # Define the name and other details of the widget
@@ -30,6 +30,7 @@ class OWAsFairness(OWWidget):
     settingsHandler = DomainContextHandler()
     protected_attribute = ContextSetting(None, schema_only=True) #schema_only -> The setting is saved within the workflow but the default never changes.
     favorable_class_value = ContextSetting("", schema_only=True)
+    privileged_PA_values = ContextSetting([], schema_only=True)
 
 
     def __init__(self, *args, **kwargs):
@@ -37,15 +38,20 @@ class OWAsFairness(OWWidget):
 
         self._data: Optional[Table] = None
 
-        protected_attribute_model = DomainModel(valid_types=(ContinuousVariable,)) #DomainModel stores the domain of the input data and allows us to select a attribute from it. It is tied to the gui.comboBox widget. And Can be accesed by self.controls.protected_attribute.model()
         favorable_class_items_model = PyListModel(iterable=[]) #Here we don't want to display the different attributes/features but the values of the attribute so I couldn't use the DomainModel which stores the features, so I used the PyListModel which can store any type in an iterable
+        protected_attribute_model = DomainModel(valid_types=(DiscreteVariable,)) #DomainModel stores the domain of the input data and allows us to select a attribute from it. It is tied to the gui.comboBox widget. And Can be accesed by self.controls.protected_attribute.model()
+        privileged_PA_values_model = PyListModel(iterable=[])
 
         # Create a box for each of the three variables and populate them with comboboxes and listboxes.  
         box = gui.vBox(self.controlArea, 'Favorable Class Value', margin=0)
         gui.comboBox(box, self, 'favorable_class_value', model=favorable_class_items_model, callback=self.commit, searchable=True,)
 
         box = gui.vBox(self.controlArea, 'Protected Attribute', margin=0)
-        gui.comboBox(box, self, 'protected_attribute', model=protected_attribute_model, callback=self.commit, searchable=True,)
+        gui.comboBox(box, self, 'protected_attribute', model=protected_attribute_model, callback=[self.changeValues, self.commit], searchable=True,)
+
+        box = gui.vBox(self.controlArea, 'Privileged Protected Attribute Values', margin=0)
+        var_list = gui.listView(box, self, 'privileged_PA_values', model=privileged_PA_values_model, callback=self.commit)
+        var_list.setSelectionMode(var_list.ExtendedSelection)
 
 
 
@@ -72,18 +78,34 @@ class OWAsFairness(OWWidget):
             for value in data.domain.class_vars[0].values:
                 self.controls.favorable_class_value.model().append(value)
 
+            # Fill the privileged_PA_values_model PyListModel with the values of the protected attribute variable of the input data.
+            for value in self.controls.protected_attribute.model()[0].values:
+                self.controls.privileged_PA_values.model().append(value)
 
             # Set the selected variables to the first variable in the list of variables (in the comboboxes or listboxes)
             self.protected_attribute = self.controls.protected_attribute.model()[0] if len(self.controls.protected_attribute.model()) else None
             self.favorable_class_value = self.controls.favorable_class_value.model()[0] if len(self.controls.favorable_class_value.model()) else None
+            self.privileged_PA_values = [self.controls.privileged_PA_values.model()[0]] if len(self.controls.privileged_PA_values.model()) else []
 
             # If atleast one value for each variable is selected, then open the context for the widget using the new domain
             # This means that these settings will be remembered the next time the widget receives the same input data.
-            if self.protected_attribute is not None and self.favorable_class_value is not None:
+            if self.protected_attribute is not None and self.favorable_class_value is not None and len(self.controls.privileged_PA_values.model()) > 0:
                 self.openContext(domain)
 
         # Apply the changes and send the data to the output
         self.commit()
+
+
+    # This function is called when the user changes the protected attribute variable
+    # It changes the values of the privileged_PA_values_model PyListModel
+    def changeValues(self) -> None:
+        # Clear the list of values
+        self.controls.privileged_PA_values.model().clear()
+        # Fill the list with the values of the new protected attribute variable
+        for value in self.protected_attribute.values:
+            self.controls.privileged_PA_values.model().append(value)
+        self.privileged_PA_values = [self.controls.privileged_PA_values.model()[0]] if len(self.controls.privileged_PA_values.model()) else []
+
 
     # This function is called when the user changes the value of the comboboxes or listboxes
     # It changes the data attributes and outputs the data
@@ -91,9 +113,11 @@ class OWAsFairness(OWWidget):
         if self._data is not None:
             self._data.attributes['favorable_class_value'] = str(self.favorable_class_value)
             self._data.attributes['protected_attribute'] = str(self.protected_attribute)
+            self._data.attributes['privileged_PA_values'] = self.privileged_PA_values
 
             # print(self._data.attributes['favorable_class_value'])
             # print(self._data.attributes['protected_attribute'])
+            # print(self._data.attributes['privileged_PA_values'])
         
         self.Outputs.data.send(self._data)
 

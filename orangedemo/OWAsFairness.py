@@ -1,13 +1,13 @@
 from typing import Optional
 
 from Orange.widgets import gui
-from Orange.widgets.settings import Setting, ContextSetting, DomainContextHandler
+from Orange.widgets.settings import ContextSetting, DomainContextHandler, Setting
 from Orange.widgets.widget import Input, Output, OWWidget
 from Orange.widgets import gui
-from Orange.widgets.settings import Setting, ContextSetting, DomainContextHandler
+from Orange.widgets.settings import ContextSetting, DomainContextHandler
 from Orange.widgets.widget import Input, Output, OWWidget
 from Orange.widgets.utils.itemmodels import DomainModel, PyListModel
-from Orange.data import Table, Domain, ContinuousVariable, DiscreteVariable
+from Orange.data import Table, Domain, DiscreteVariable
 
 class OWAsFairness(OWWidget):
     # Define the name and other details of the widget
@@ -31,6 +31,7 @@ class OWAsFairness(OWWidget):
     protected_attribute = ContextSetting(None, schema_only=True) #schema_only -> The setting is saved within the workflow but the default never changes.
     favorable_class_value = ContextSetting("", schema_only=True)
     privileged_PA_values = ContextSetting([], schema_only=True)
+    auto_commit: bool = Setting(True, schema_only=True)
 
 
     def __init__(self, *args, **kwargs):
@@ -44,14 +45,19 @@ class OWAsFairness(OWWidget):
 
         # Create a box for each of the three variables and populate them with comboboxes and listboxes.  
         box = gui.vBox(self.controlArea, 'Favorable Class Value', margin=0)
-        gui.comboBox(box, self, 'favorable_class_value', model=favorable_class_items_model, callback=self.commit, searchable=True,)
+        gui.comboBox(box, self, 'favorable_class_value', model=favorable_class_items_model, callback=self.commit.deferred, searchable=True,)
 
         box = gui.vBox(self.controlArea, 'Protected Attribute', margin=0)
-        gui.comboBox(box, self, 'protected_attribute', model=protected_attribute_model, callback=[self.changeValues, self.commit], searchable=True,)
+        gui.comboBox(box, self, 'protected_attribute', model=protected_attribute_model, callback=[self.changeValues, self.commit.deferred], searchable=True,)
 
         box = gui.vBox(self.controlArea, 'Privileged Protected Attribute Values', margin=0)
-        var_list = gui.listView(box, self, 'privileged_PA_values', model=privileged_PA_values_model, callback=self.commit)
+        var_list = gui.listView(box, self, 'privileged_PA_values', model=privileged_PA_values_model, callback=self.commit.deferred)
         var_list.setSelectionMode(var_list.ExtendedSelection)
+
+        # A Commit/AutoCommit button which controls if a new signal is sent whenever the user changes the value of a variable or only when the user commits the changes
+        self.commit_button = gui.auto_commit(
+            self.controlArea, self, 'auto_commit', '&Commit', box=False
+        )
 
 
 
@@ -93,7 +99,7 @@ class OWAsFairness(OWWidget):
                 self.openContext(domain)
 
         # Apply the changes and send the data to the output
-        self.commit()
+        self.commit.now() # In the set_data we always have a commit.now() instead of a commit.deferred() because we want to apply the changes as soon as the input data changes.
 
 
     # This function is called when the user changes the protected attribute variable
@@ -109,6 +115,7 @@ class OWAsFairness(OWWidget):
 
     # This function is called when the user changes the value of the comboboxes or listboxes
     # It changes the data attributes and outputs the data
+    @gui.deferred # The defered allows us to only call the function once the user has stopped changing the values of the comboboxes or listboxes and "Applies" the changes
     def commit(self) -> None:
         if self._data is not None:
             self._data.attributes['favorable_class_value'] = str(self.favorable_class_value)

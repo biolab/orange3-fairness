@@ -27,7 +27,7 @@ class OWAsFairness(OWWidget):
 
 
     #Settings: The favorable_class, protected_attribute, and privileged_values are instance variables that are declared as ContextSetting. A ContextSetting is a special type of Setting that Orange remembers for each different context (i.e., input data domain).
-    settingsHandler = DomainContextHandler()
+    settingsHandler = DomainContextHandler(match_values=DomainContextHandler.MATCH_VALUES_ALL)
     protected_attribute = ContextSetting(None, schema_only=True) #schema_only -> The setting is saved within the workflow but the default never changes.
     favorable_class_value = ContextSetting("", schema_only=True)
     privileged_PA_values = ContextSetting([], schema_only=True)
@@ -112,21 +112,46 @@ class OWAsFairness(OWWidget):
             self.controls.privileged_PA_values.model().append(value)
         self.privileged_PA_values = [self.controls.privileged_PA_values.model()[0]] if len(self.controls.privileged_PA_values.model()) else []
 
+    # Adding the protected attribute and favorable class value as attributes to the data domain
+    def as_fairness_data(self, data: Table) -> Optional[Table]:
+        if not self.protected_attribute or not self.favorable_class_value or not self.privileged_PA_values or not data:
+            return None
+        
+        domain = data.domain
+        
+        # Remove the attribute "privileged_PA_values" from all attributes of the data domain (if it exists)
+        for attribute in domain.attributes:
+            attribute.attributes.pop('privileged_PA_values', None)
+
+        # Clear the attributes of the data domain
+        domain['y'].attributes.pop('favorable_class_value', None)
+
+
+        # Add the variables as attributes to the data
+        domain["y"].attributes["favorable_class_value"] = self.favorable_class_value
+        domain[self.protected_attribute.name].attributes["privileged_PA_values"] = self.privileged_PA_values
+
+        # Create a new table with the new domain
+        new_data = data.transform(domain)
+        return new_data
+
 
     # This function is called when the user changes the value of the comboboxes or listboxes
     # It changes the data attributes and outputs the data
     @gui.deferred # The defered allows us to only call the function once the user has stopped changing the values of the comboboxes or listboxes and "Applies" the changes
     def commit(self) -> None:
         if self._data is not None:
-            self._data.attributes['favorable_class_value'] = str(self.favorable_class_value)
-            self._data.attributes['protected_attribute'] = str(self.protected_attribute)
-            self._data.attributes['privileged_PA_values'] = self.privileged_PA_values
+            data = self.as_fairness_data(self._data)
+
+            data.attributes['favorable_class_value'] = str(self.favorable_class_value)
+            data.attributes['protected_attribute'] = str(self.protected_attribute)
+            data.attributes['privileged_PA_values'] = self.privileged_PA_values
 
             # print(self._data.attributes['favorable_class_value'])
             # print(self._data.attributes['protected_attribute'])
             # print(self._data.attributes['privileged_PA_values'])
         
-        self.Outputs.data.send(self._data)
+        self.Outputs.data.send(data)
 
 
         

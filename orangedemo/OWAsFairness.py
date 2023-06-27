@@ -9,6 +9,8 @@ from Orange.widgets.widget import Input, Output, OWWidget
 from Orange.widgets.utils.itemmodels import DomainModel, PyListModel
 from Orange.data import Table, Domain, DiscreteVariable
 
+import sys
+
 class OWAsFairness(OWWidget):
     # Define the name and other details of the widget
     name = "As Fairness Data"
@@ -124,11 +126,11 @@ class OWAsFairness(OWWidget):
             attribute.attributes.pop('privileged_PA_values', None)
 
         # Clear the attributes of the data domain
-        domain['y'].attributes.pop('favorable_class_value', None)
+        domain[domain.class_var].attributes.pop('favorable_class_value', None)
 
 
         # Add the variables as attributes to the data
-        domain["y"].attributes["favorable_class_value"] = self.favorable_class_value
+        domain[domain.class_var].attributes["favorable_class_value"] = self.favorable_class_value
         domain[self.protected_attribute.name].attributes["privileged_PA_values"] = self.privileged_PA_values
 
         # Create a new table with the new domain
@@ -154,4 +156,28 @@ class OWAsFairness(OWWidget):
         self.Outputs.data.send(data)
 
 
+
+def main(argv=sys.argv):
+    from AnyQt.QtWidgets import QApplication
+    app = QApplication(list(argv))
+    args = app.arguments()
+    if len(args) > 1:
+        filename = args[1]
+    else:
+        filename = "iris"
+
+    ow = OWAsFairness()
+    ow.show()
+    ow.raise_()
+
+    dataset = Table(filename)
+    ow.set_data(dataset)
+    ow.handleNewSignals()
+    app.exec_()
+    ow.set_data(None)
+    ow.handleNewSignals()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
         

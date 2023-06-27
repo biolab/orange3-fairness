@@ -1,22 +1,19 @@
 from typing import Optional
 
 from Orange.widgets import gui
-from Orange.widgets.settings import ContextSetting, DomainContextHandler, Setting
-from Orange.widgets.widget import Input, Output, OWWidget
+from Orange.widgets.widget import Input, OWWidget
 from Orange.widgets import gui
-from Orange.widgets.settings import ContextSetting, DomainContextHandler
-from Orange.widgets.widget import Input, Output, OWWidget
-from Orange.widgets.utils.itemmodels import DomainModel, PyListModel
-from Orange.data import Table, Domain, DiscreteVariable
+from Orange.widgets.widget import Input, OWWidget
+from Orange.data import Table
 
 from aif360.datasets import StandardDataset
 from aif360.metrics import BinaryLabelDatasetMetric
 
-import pandas as pd
+import sys
 
 class OWDatasetBias(OWWidget):
     name = "Dataset Bias"
-    description = "Computes the bias of a dataset."
+    description = "Computes the bias of a dataset. More specifically, it computes the disparate impact and statistical parity difference metrics for the dataset."
     # icon = "icons/bias.svg"
     # priority = 0
 
@@ -43,7 +40,7 @@ class OWDatasetBias(OWWidget):
 
     @Inputs.data
     def set_data(self, data: Optional[Table]) -> None:
-        if not data or not "favorable_class_value" in data.attributes or not "protected_attribute" in data.attributes or not "privileged_PA_values" in data.attributes or data.domain.class_var.name != "y":
+        if not data or not "favorable_class_value" in data.attributes or not "protected_attribute" in data.attributes or not "privileged_PA_values" in data.attributes:
             return
         
         self._data = data
@@ -60,6 +57,8 @@ class OWDatasetBias(OWWidget):
         # Merge xdf and ydf TODO: Check if I need to merge mdf
         df = ydf.merge(xdf, left_index=True, right_index=True)
 
+        class_name = data.domain.class_var.name
+
         # TODO: Change this so it reads these values from the domain
         favorable_class_value = data.attributes["favorable_class_value"]
         protected_attribute = data.attributes["protected_attribute"]
@@ -69,7 +68,7 @@ class OWDatasetBias(OWWidget):
         # We need to do this because when we convert the Orange table to a pandas dataframe all categorical variables are ordinal encoded
 
         # Get the values for the attributes
-        class_values = data.domain["y"].values
+        class_values = data.domain[class_name].values
         protected_attribute_values = data.domain[protected_attribute].values
 
         # Get the index of the favorable_class_value and privileged_PA_values in the list of values, this is the ordinal representation
@@ -85,12 +84,16 @@ class OWDatasetBias(OWWidget):
         # privileged_classes: the values of the protected attribute that are considered privileged (in this case they are ordinal encoded)
         self.standardDataset = StandardDataset(
             df = df,
-            label_name = "y",
+            label_name = class_name,
             favorable_classes = [favorable_class_value_ordinal],
             protected_attribute_names = [protected_attribute],
             privileged_classes = [privileged_PA_values_ordinal],
             # categorical_features = discrete_variables,
         )
+
+        if "weights" in mdf:
+            self.standardDataset.instance_weights = mdf["weights"].to_numpy()
+
 
         # Create the privileged and unprivileged groups
         # The format is a list of dictionaries, each dictionary contains the name of the protected attribute and the ordinal value of the privileged/unprivileged group
@@ -104,3 +107,28 @@ class OWDatasetBias(OWWidget):
         self.statistical_parity_difference = dataset_metric.statistical_parity_difference()
         self.DI_label.setText(f"Disparate Impact (ideal = 1): {self.disparate_impact}")
         self.SPD_label.setText(f"Statistical Parity Difference (ideal = 0): {self.statistical_parity_difference}")
+
+
+def main(argv=sys.argv):
+    from AnyQt.QtWidgets import QApplication
+    app = QApplication(list(argv))
+    args = app.arguments()
+    if len(args) > 1:
+        filename = args[1]
+    else:
+        filename = "iris"
+
+    ow = OWDatasetBias()
+    ow.show()
+    ow.raise_()
+
+    dataset = Table(filename)
+    ow.set_data(dataset)
+    ow.handleNewSignals()
+    app.exec_()
+    ow.set_data(None)
+    ow.handleNewSignals()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

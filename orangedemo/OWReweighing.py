@@ -15,58 +15,8 @@ from aif360.algorithms.preprocessing import Reweighing as ReweighingAlgorithm
 
 import pandas as pd
 
-import sys
 
-
-class Reweighing(preprocess.Preprocess):
-
-    def __init__(self):
-        self.privileged_groups = None
-        self.unprivileged_groups = None
-        self.standardDataset = None
-        self.data = None
-
-    def __call__(self, data):
-        self.data = data
-        # Create the variable "weights" using compute_value, this way the "recepie" for how to compute the weights is stored in the variable
-        weights = ContinuousVariable("weights", compute_value=self.computeWeights)
-        # Add the variable "weights" to the domain of the data
-        new_data = data.transform(Domain(data.domain.attributes, data.domain.class_vars, data.domain.metas + (weights,)))
-        return new_data
-
-    def computeWeights(self, data):
-        self.data = data
-        self.TableToStandardDataset(data)
-        reweighing = ReweighingAlgorithm(self.unprivileged_groups, self.privileged_groups)
-        self.standardDataset = reweighing.fit_transform(self.standardDataset)
-        return self.standardDataset.instance_weights
-
-    
-    # def StandardDatasetToTable(self, data, domain):
-    #     # Convert aif360 StandardDataset to Orange data
-    #     df = data.convert_to_dataframe()[0]
-    #     # Create the dataframe of features without the class variable
-    #     xdf = df.drop(columns=[self.data.domain.class_var.name])
-    #     # Create the dataframe of the class variable
-    #     ydf = df[[self.data.domain.class_var.name]]
-    #     # Create the dataframe of the instance weights
-    #     mdf = pd.DataFrame(data.instance_weights, columns=["weights"])
-    #     mdf.index = xdf.index
-    #     # Create the Orange table
-    #     new_data = Table.from_pandas_dfs(xdf, ydf, mdf)
-    #     # Set the domain of the Orange table back to the original domain
-    #     # By doing so the Table is coverted from ordinal encoding back to categorical encoding
-    #     # It also sets all other attributes of the domain back to the original values and adds the additional attributes back to the data
-    #     weights_meta = ContinuousVariable("weights")
-    #     new_metas = domain.metas + (weights_meta,)
-    #     new_domain = Domain(domain.attributes, domain.class_vars, new_metas)
-    #     new_data.domain = new_domain
-    #     new_data.attributes = self.data.attributes
-    #     # new_data.domain = domain
-    #     return new_data
-
-
-    def TableToStandardDataset(self, data) -> None:
+def table_to_standard_dataset(data) -> None:
         # Convert Orange data to aif360 dataset, it returns a touple xdf, ydf, mdf
         xdf, ydf, mdf = data.to_pandas_dfs()
         # Merge xdf and ydf TODO: Check if I need to merge mdf
@@ -95,7 +45,7 @@ class Reweighing(preprocess.Preprocess):
         # favorable_classes: the values of the class variable that are considered favorable
         # protected_attribute_names: the name of the protected attribute
         # privileged_classes: the values of the protected attribute that are considered privileged (in this case they are ordinal encoded)
-        self.standardDataset = StandardDataset(
+        standardDataset = StandardDataset(
             df = df,
             label_name = data.domain.class_var.name,
             favorable_classes = [favorable_class_value_ordinal],
@@ -105,37 +55,86 @@ class Reweighing(preprocess.Preprocess):
         )
 
         if "weights" in mdf:
-            self.standardDataset.instance_weights = mdf["weights"].to_numpy()
+            standardDataset.instance_weights = mdf["weights"].to_numpy()
 
         # Create the privileged and unprivileged groups
         # The format is a list of dictionaries, each dictionary contains the name of the protected attribute and the ordinal value of the privileged/unprivileged group
-        self.privileged_groups = [{protected_attribute: ordinal_value} for ordinal_value in privileged_PA_values_ordinal]
-        self.unprivileged_groups = [{protected_attribute: ordinal_value} for ordinal_value in unprivileged_PA_values_ordinal]
+        privileged_groups = [{protected_attribute: ordinal_value} for ordinal_value in privileged_PA_values_ordinal]
+        unprivileged_groups = [{protected_attribute: ordinal_value} for ordinal_value in unprivileged_PA_values_ordinal]
+
+        return standardDataset, privileged_groups, unprivileged_groups
 
 
+
+class MzCom:
+    # The __init__ method is called when the class is created and can have as many arguments as you want. MzCom(model) creates an instance of the class
+    # The __call__ method is called when the class is called, it must only have one argument, which is the data. MzCom(model)(data) calls the __call__ method of the class
+    def __init__(self, model):
+        self.model = model
+
+    def __call__(self, data):
+        if not isinstance(data, StandardDataset):
+            data, _, _ = table_to_standard_dataset(data)
+        # Check if the model is a ReweighingAlgorithm, if not raise an error
+        if not isinstance(self.model, ReweighingAlgorithm):
+            raise ValueError("The model must be a ReweighingAlgorithm")
+        # Call the transform method of the model
+        data = self.model.transform(data)
+        # Return the weights
+        return data.instance_weights
+    
+class ReweighingModel(preprocess.Preprocess):
+    # This class doesn't need an __init__ method because it doesn't need any arguments when it is created
+    # The __call__ method creates an instance of the ReweighingAlgorithm, fits it to the data and returns it
+    def __call__(self, data):
+        standardDataset, privileged_groups, unprivileged_groups = table_to_standard_dataset(data)
+        reweighing = ReweighingAlgorithm(unprivileged_groups, privileged_groups)
+        reweighing = reweighing.fit(standardDataset)
+        return reweighing
+    
+
+class ReweighingTransform(preprocess.Preprocess):
+    # The __call__ method applies the reweighing algorithm to the data and returns the data with the weights
+    def __call__(self, data):
+        # Create an instalce of the ReweighingModel, and call the __call__ method with the data as argument
+        model = ReweighingModel()(data)
+        # Create a new variable "weights" with the compute_value function, the compute_value function is the MzCom class, which when called calls the transform method of the model
+        weights = ContinuousVariable("weights", compute_value=MzCom(model))
+        # Alternative for the compute_value: compute_value=lambda data, model=model: transf(data, model)
+        
+        # Add the variable "weights" to the domain of the data
+        new_data = data.transform(Domain(data.domain.attributes, data.domain.class_vars, data.domain.metas + (weights,)))
+        return new_data
+    
+
+    
 class OWReweighing(OWWidget):
     name = "Reweighing"
     description = "Applies the reweighing algorithm to a dataset, which adjusts the weights of rows."
     # icon = 'icons/owreweighing.svg'
     # priority = 0
 
-    want_main_area = False
     want_control_area = False
     resizing_enabled = False
 
+    # Define the inputs and outputs of the widget
     class Inputs:
         data = Input("Data", Table)
-        
 
     class Outputs:
         data = Output("Preprocessed Data", Table)
         preprocessor = Output("Preprocessor", preprocess.Preprocess, dynamic=False)
 
+    # Define the initial state of the widget (constructor)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        box = gui.vBox(self.mainArea, "Info")
+        gui.widgetLabel(box, "This widget applies the reweighing algorithm to a dataset, which adjusts the weights of rows.\nThe input data must have the additional 'AsFairness' attributes and be without any missing values.")
+
         self._data: Optional[Table] = None
 
+    # Define what should happen when the input data is received
     @Inputs.data
     def set_data(self, data: Optional[Table]) -> None:
         if not data:
@@ -146,46 +145,13 @@ class OWReweighing(OWWidget):
     def handleNewSignals(self):
         self.apply()
 
+    #
     def apply(self):
         if self._data is None:
             return
 
-        reweighing = Reweighing()
-        preprocessed_data = reweighing(self._data)
+        preprocessor = ReweighingTransform()
+        preprocessed_data = preprocessor(self._data)
+
         self.Outputs.data.send(preprocessed_data)
-        self.Outputs.preprocessor.send(reweighing)
-
-
-def main(argv=sys.argv):
-    from AnyQt.QtWidgets import QApplication
-    app = QApplication(list(argv))
-
-    # Load the data from the .tab file
-    dataset = Table("./orangedemo/testDataset/adultAsFairness.tab")
-
-    # Load the metadata from the .metadata file
-    with open("./orangedemo/testDataset/adultAsFairness.tab.metadata", "r") as f:
-        metadata = f.read()
-
-    # Process the metadata and add it to the data
-    # The exact way to do this will depend on the format of your metadata file
-    # Here's a basic example
-    # for line in metadata.split("\n"):
-    #     if line:
-    #         attribute_name, attribute_value = line.split("\t")
-    #         attribute = dataset.domain[attribute_name]
-    #         attribute.metadata = attribute_value
-
-    ow = OWReweighing()
-    ow.show()
-    ow.raise_()
-
-    ow.set_data(dataset)
-    ow.handleNewSignals()
-    app.exec_()
-    ow.set_data(None)
-    ow.handleNewSignals()
-    return 0
-
-if __name__ == "__main__":
-    sys.exit(main())
+        self.Outputs.preprocessor.send(preprocessor)

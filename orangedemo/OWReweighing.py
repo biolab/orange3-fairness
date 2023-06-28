@@ -15,6 +15,8 @@ from aif360.algorithms.preprocessing import Reweighing as ReweighingAlgorithm
 
 import pandas as pd
 
+import sys
+
 
 class Reweighing(preprocess.Preprocess):
 
@@ -26,34 +28,42 @@ class Reweighing(preprocess.Preprocess):
 
     def __call__(self, data):
         self.data = data
+        # Create the variable "weights" using compute_value, this way the "recepie" for how to compute the weights is stored in the variable
+        weights = ContinuousVariable("weights", compute_value=self.computeWeights)
+        # Add the variable "weights" to the domain of the data
+        new_data = data.transform(Domain(data.domain.attributes, data.domain.class_vars, data.domain.metas + (weights,)))
+        return new_data
+
+    def computeWeights(self, data):
+        self.data = data
         self.TableToStandardDataset(data)
         reweighing = ReweighingAlgorithm(self.unprivileged_groups, self.privileged_groups)
         self.standardDataset = reweighing.fit_transform(self.standardDataset)
-        return self.StandardDatasetToTable(self.standardDataset, self.data.domain)
+        return self.standardDataset.instance_weights
 
     
-    def StandardDatasetToTable(self, data, domain):
-        # Convert aif360 StandardDataset to Orange data
-        df = data.convert_to_dataframe()[0]
-        # Create the dataframe of features without the class variable
-        xdf = df.drop(columns=[self.data.domain.class_var.name])
-        # Create the dataframe of the class variable
-        ydf = df[[self.data.domain.class_var.name]]
-        # Create the dataframe of the instance weights
-        mdf = pd.DataFrame(data.instance_weights, columns=["weights"])
-        mdf.index = xdf.index
-        # Create the Orange table
-        new_data = Table.from_pandas_dfs(xdf, ydf, mdf)
-        # Set the domain of the Orange table back to the original domain
-        # By doing so the Table is coverted from ordinal encoding back to categorical encoding
-        # It also sets all other attributes of the domain back to the original values and adds the additional attributes back to the data
-        weights_meta = ContinuousVariable("weights")
-        new_metas = domain.metas + (weights_meta,)
-        new_domain = Domain(domain.attributes, domain.class_vars, new_metas)
-        new_data.domain = new_domain
-        new_data.attributes = self.data.attributes
-        # new_data.domain = domain
-        return new_data
+    # def StandardDatasetToTable(self, data, domain):
+    #     # Convert aif360 StandardDataset to Orange data
+    #     df = data.convert_to_dataframe()[0]
+    #     # Create the dataframe of features without the class variable
+    #     xdf = df.drop(columns=[self.data.domain.class_var.name])
+    #     # Create the dataframe of the class variable
+    #     ydf = df[[self.data.domain.class_var.name]]
+    #     # Create the dataframe of the instance weights
+    #     mdf = pd.DataFrame(data.instance_weights, columns=["weights"])
+    #     mdf.index = xdf.index
+    #     # Create the Orange table
+    #     new_data = Table.from_pandas_dfs(xdf, ydf, mdf)
+    #     # Set the domain of the Orange table back to the original domain
+    #     # By doing so the Table is coverted from ordinal encoding back to categorical encoding
+    #     # It also sets all other attributes of the domain back to the original values and adds the additional attributes back to the data
+    #     weights_meta = ContinuousVariable("weights")
+    #     new_metas = domain.metas + (weights_meta,)
+    #     new_domain = Domain(domain.attributes, domain.class_vars, new_metas)
+    #     new_data.domain = new_domain
+    #     new_data.attributes = self.data.attributes
+    #     # new_data.domain = domain
+    #     return new_data
 
 
     def TableToStandardDataset(self, data) -> None:
@@ -111,6 +121,7 @@ class OWReweighing(OWWidget):
 
     want_main_area = False
     want_control_area = False
+    resizing_enabled = False
 
     class Inputs:
         data = Input("Data", Table)
@@ -144,3 +155,37 @@ class OWReweighing(OWWidget):
         self.Outputs.data.send(preprocessed_data)
         self.Outputs.preprocessor.send(reweighing)
 
+
+def main(argv=sys.argv):
+    from AnyQt.QtWidgets import QApplication
+    app = QApplication(list(argv))
+
+    # Load the data from the .tab file
+    dataset = Table("./orangedemo/testDataset/adultAsFairness.tab")
+
+    # Load the metadata from the .metadata file
+    with open("./orangedemo/testDataset/adultAsFairness.tab.metadata", "r") as f:
+        metadata = f.read()
+
+    # Process the metadata and add it to the data
+    # The exact way to do this will depend on the format of your metadata file
+    # Here's a basic example
+    # for line in metadata.split("\n"):
+    #     if line:
+    #         attribute_name, attribute_value = line.split("\t")
+    #         attribute = dataset.domain[attribute_name]
+    #         attribute.metadata = attribute_value
+
+    ow = OWReweighing()
+    ow.show()
+    ow.raise_()
+
+    ow.set_data(dataset)
+    ow.handleNewSignals()
+    app.exec_()
+    ow.set_data(None)
+    ow.handleNewSignals()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

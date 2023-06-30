@@ -8,4 +8,5 @@ orangedemo/OWAsFairness.py
 orangedemo/OWDatasetBias.py
 orangedemo/OWReweighing.py
 orangedemo/__init__.py
+orangedemo/utils.py
 orangedemo/icons/DataSamplerA.svg

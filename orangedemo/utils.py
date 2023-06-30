@@ -30,7 +30,7 @@ def table_to_standard_dataset(data) -> None:
         # favorable_classes: the values of the class variable that are considered favorable
         # protected_attribute_names: the name of the protected attribute
         # privileged_classes: the values of the protected attribute that are considered privileged (in this case they are ordinal encoded)
-        standardDataset = StandardDataset(
+        standard_dataset = StandardDataset(
             df = df,
             label_name = data.domain.class_var.name,
             favorable_classes = [favorable_class_value_ordinal],
@@ -40,11 +40,11 @@ def table_to_standard_dataset(data) -> None:
         )
 
         if "weights" in mdf:
-            standardDataset.instance_weights = mdf["weights"].to_numpy()
+            standard_dataset.instance_weights = mdf["weights"].to_numpy()
 
         # Create the privileged and unprivileged groups
         # The format is a list of dictionaries, each dictionary contains the name of the protected attribute and the ordinal value of the privileged/unprivileged group
         privileged_groups = [{protected_attribute: ordinal_value} for ordinal_value in privileged_PA_values_ordinal]
         unprivileged_groups = [{protected_attribute: ordinal_value} for ordinal_value in unprivileged_PA_values_ordinal]
 
-        return standardDataset, privileged_groups, unprivileged_groups
+        return standard_dataset, privileged_groups, unprivileged_groups

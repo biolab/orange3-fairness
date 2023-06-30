@@ -1,12 +1,11 @@
+from abc import abstractmethod
 from Orange.data import DiscreteVariable, ContinuousVariable, Domain
 from Orange.evaluation.scoring import Score
 
-from aif360.datasets import StandardDataset
 from aif360.metrics import ClassificationMetric
 
 from orangedemo.utils import table_to_standard_dataset
 
-from abc import abstractmethod
 
 __all__ = ["StatisticalParityDifference", "EqualOpportunityDifference", "AverageOddsDifference", "DisparateImpact"]
 
@@ -33,12 +32,12 @@ class FairnessScorer(Score, abstract=True):
         dataset, privileged_groups, unprivileged_groups = table_to_standard_dataset(results.data)
         dataset_pred = dataset.copy()
         dataset_pred.labels = results.predicted
-        classificationMetric = ClassificationMetric(dataset, dataset_pred, unprivileged_groups=unprivileged_groups, privileged_groups=privileged_groups)
-        return [self.metric(classificationMetric)]
+        classification_metric = ClassificationMetric(dataset, dataset_pred, unprivileged_groups=unprivileged_groups, privileged_groups=privileged_groups)
+        return [self.metric(classification_metric)]
     
     # This indicates that the metric method needs to be implemented by the subclasses
     @abstractmethod
-    def metric(self, classificationMetric):
+    def metric(self, classification_metric):
         pass
 
 class StatisticalParityDifference(FairnessScorer):

@@ -2,17 +2,14 @@ from typing import Optional
 
 from Orange.widgets import gui
 from Orange.widgets.widget import Input, Output, OWWidget
-from Orange.widgets import gui
-from Orange.widgets.widget import Input, Output, OWWidget
 from Orange.data import Table, Domain, ContinuousVariable
 from Orange.preprocess import preprocess
 
 from aif360.datasets import StandardDataset
 from aif360.algorithms.preprocessing import Reweighing as ReweighingAlgorithm
 
-import pandas as pd
-
 from orangedemo.utils import table_to_standard_dataset
+
 
 class MzCom:
     # The __init__ method is called when the class is created and can have as many arguments as you want. MzCom(model) creates an instance of the class
@@ -31,15 +28,23 @@ class MzCom:
         # Return the weights
         return data.instance_weights
     
+    # TODO: Check if this is ok
+    InheritEq = True
+
+
 class ReweighingModel(preprocess.Preprocess):
     # This class doesn't need an __init__ method because it doesn't need any arguments when it is created
     # The __call__ method creates an instance of the ReweighingAlgorithm, fits it to the data and returns it
     def __call__(self, data):
-        standardDataset, privileged_groups, unprivileged_groups = table_to_standard_dataset(data)
+        (
+            standardDataset,
+            privileged_groups,
+            unprivileged_groups,
+        ) = table_to_standard_dataset(data)
         reweighing = ReweighingAlgorithm(unprivileged_groups, privileged_groups)
         reweighing = reweighing.fit(standardDataset)
         return reweighing
-    
+
 
 class ReweighingTransform(preprocess.Preprocess):
     # The __call__ method applies the reweighing algorithm to the data and returns the data with the weights
@@ -49,13 +54,18 @@ class ReweighingTransform(preprocess.Preprocess):
         # Create a new variable "weights" with the compute_value function, the compute_value function is the MzCom class, which when called calls the transform method of the model
         weights = ContinuousVariable("weights", compute_value=MzCom(model))
         # Alternative for the compute_value: compute_value=lambda data, model=model: transf(data, model)
-        
-        # Add the variable "weights" to the domain of the data
-        new_data = data.transform(Domain(data.domain.attributes, data.domain.class_vars, data.domain.metas + (weights,)))
-        return new_data
-    
 
-    
+        # Add the variable "weights" to the domain of the data
+        new_data = data.transform(
+            Domain(
+                data.domain.attributes,
+                data.domain.class_vars,
+                data.domain.metas + (weights,),
+            )
+        )
+        return new_data
+
+
 class OWReweighing(OWWidget):
     name = "Reweighing"
     description = "Applies the reweighing algorithm to a dataset, which adjusts the weights of rows."
@@ -78,7 +88,10 @@ class OWReweighing(OWWidget):
         super().__init__(*args, **kwargs)
 
         box = gui.vBox(self.mainArea, "Info")
-        gui.widgetLabel(box, "This widget applies the reweighing algorithm to a dataset, which adjusts the weights of rows.\nThe input data must have the additional 'AsFairness' attributes and be without any missing values.")
+        gui.widgetLabel(
+            box,
+            "This widget applies the reweighing algorithm to a dataset, which adjusts the weights of rows.\nThe input data must have the additional 'AsFairness' attributes and be without any missing values.",
+        )
 
         self._data: Optional[Table] = None
 
@@ -93,7 +106,6 @@ class OWReweighing(OWWidget):
     def handleNewSignals(self):
         self.apply()
 
-    #
     def apply(self):
         if self._data is None:
             return

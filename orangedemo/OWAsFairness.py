@@ -3,13 +3,9 @@ from typing import Optional
 from Orange.widgets import gui
 from Orange.widgets.settings import ContextSetting, DomainContextHandler, Setting
 from Orange.widgets.widget import Input, Output, OWWidget
-from Orange.widgets import gui
-from Orange.widgets.settings import ContextSetting, DomainContextHandler
-from Orange.widgets.widget import Input, Output, OWWidget
 from Orange.widgets.utils.itemmodels import DomainModel, PyListModel
 from Orange.data import Table, Domain, DiscreteVariable
 
-import sys
 
 class OWAsFairness(OWWidget):
     # Define the name and other details of the widget
@@ -17,6 +13,7 @@ class OWAsFairness(OWWidget):
     description = "Converts a dataset to a fairness dataset with marked favorable class values, protected attributes and priviliged protected attribute values."
     # icon = 'icons/owassurvivaldata.svg'
     # priority = 0
+    
     want_main_area = False
     resizing_enabled = False
 
@@ -154,30 +151,4 @@ class OWAsFairness(OWWidget):
             # print(self._data.attributes['privileged_PA_values'])
         
         self.Outputs.data.send(data)
-
-
-
-def main(argv=sys.argv):
-    from AnyQt.QtWidgets import QApplication
-    app = QApplication(list(argv))
-    args = app.arguments()
-    if len(args) > 1:
-        filename = args[1]
-    else:
-        filename = "iris"
-
-    ow = OWAsFairness()
-    ow.show()
-    ow.raise_()
-
-    dataset = Table(filename)
-    ow.set_data(dataset)
-    ow.handleNewSignals()
-    app.exec_()
-    ow.set_data(None)
-    ow.handleNewSignals()
-    return 0
-
-if __name__ == "__main__":
-    sys.exit(main())
         

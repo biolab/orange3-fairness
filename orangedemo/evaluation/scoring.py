@@ -4,17 +4,10 @@ from Orange.evaluation.scoring import Score
 
 from aif360.metrics import ClassificationMetric
 
-from orangedemo.utils import table_to_standard_dataset
+from orangedemo.utils import table_to_standard_dataset, contains_fairness_attributes
 
 
 __all__ = ["StatisticalParityDifference", "EqualOpportunityDifference", "AverageOddsDifference", "DisparateImpact"]
-
-def contains_fairness_attributes(domain: Domain) -> bool:
-    return (
-        # TODO: Check for other fairness attributes ?
-        "favorable_class_value" in domain.class_var.attributes
-    )
-
 
 class FairnessScorer(Score, abstract=True):
     class_types = (

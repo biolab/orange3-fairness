@@ -1,4 +1,21 @@
 from aif360.datasets import StandardDataset
+from Orange.data import Domain
+
+
+MISSING_FAIRNESS_ATTRIBUTES: str = (
+    'The dataset does not contain the fairness attributes. '
+    'Use the "As Fairness Data" widget to add them. '
+)
+
+def contains_fairness_attributes(domain: Domain) -> bool:
+    return (
+        # TODO: Check for other fairness attributes ?
+        "favorable_class_value" in domain.class_var.attributes
+    )
+
+def is_standard_dataset(data) -> bool:
+    return isinstance(data, StandardDataset)
+
 
 
 def table_to_standard_dataset(data) -> None:
@@ -23,6 +40,14 @@ def table_to_standard_dataset(data) -> None:
         favorable_class_value_ordinal = class_values.index(favorable_class_value)
         privileged_PA_values_ordinal = [protected_attribute_values.index(value) for value in privileged_PA_values]
         unprivileged_PA_values_ordinal = [i for i in range(len(protected_attribute_values)) if i not in privileged_PA_values_ordinal]
+
+
+        # If the data is from a "predict" function call and does not contain the class variable we need to add it and assign it to one of the values
+        # This is because the aif360 StandardDataset requires the class variable to be present even if we will not use it so we can assign it to any value
+        if data.domain.class_var.name not in df.columns:
+            df[data.domain.class_var.name] = favorable_class_value
+
+
 
         # Create the StandardDataset, this is the dataset that aif360 uses
         # df: a pandas dataframe containing all the data

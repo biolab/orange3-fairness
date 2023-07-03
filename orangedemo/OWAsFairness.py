@@ -6,6 +6,8 @@ from Orange.widgets.widget import Input, Output, OWWidget
 from Orange.widgets.utils.itemmodels import DomainModel, PyListModel
 from Orange.data import Table, Domain, DiscreteVariable
 
+from Orange.widgets.utils.widgetpreview import WidgetPreview
+
 
 class OWAsFairness(OWWidget):
     # Define the name and other details of the widget
@@ -152,3 +154,7 @@ class OWAsFairness(OWWidget):
         
         self.Outputs.data.send(data)
         
+
+if __name__ == "__main__":
+    table = Table('iris.tab')
+    WidgetPreview(OWAsFairness).run(input_data=table)

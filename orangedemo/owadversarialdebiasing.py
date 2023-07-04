@@ -1,19 +1,16 @@
-from typing import Optional
-
 from itertools import chain
 
 from Orange.widgets import gui
-from Orange.widgets.settings import ContextSetting, DomainContextHandler, Setting
+from Orange.widgets.settings import Setting
 from Orange.widgets.utils.owlearnerwidget import OWBaseLearner
-from Orange.widgets.utils.itemmodels import DomainModel, PyListModel
-from Orange.data import Table, Domain, DiscreteVariable
+from Orange.data import Table
+from Orange.widgets.utils.widgetpreview import WidgetPreview
 
 from AnyQt.QtWidgets import QFormLayout, QLabel
-from AnyQt.QtCore import Qt, QThread, QObject
+from AnyQt.QtCore import Qt
 
 from orangedemo.modeling.adversarial import AdversarialDebiasingLearner
 
-from Orange.widgets.utils.widgetpreview import WidgetPreview
 
 
 class OWAdversarialDebiasing(OWBaseLearner):
@@ -22,14 +19,17 @@ class OWAdversarialDebiasing(OWBaseLearner):
     # icon = "icons/AdversarialDebiasing.svg"
     # priority = 10
 
+    # For inputs and outputs we use the same as in OWBaseLearner superclass
     class Inputs(OWBaseLearner.Inputs):
         pass
 
     class Outputs(OWBaseLearner.Outputs):
         pass
 
+    # Here we define the learner we want to use, in this case it is the AdversarialDebiasingLearner
     LEARNER = AdversarialDebiasingLearner
 
+    # We define the list of lambdas for the slider
     lambdas = list(
         chain(
             [0],
@@ -44,17 +44,23 @@ class OWAdversarialDebiasing(OWBaseLearner):
         )
     )
 
+    # We define the settings we want to use
+    # TODO: Should i use context/domain settings?
     hidden_layers_neurons = Setting(100)
     number_of_epochs = Setting(50)
     batch_size = Setting(128)
     debias = Setting(True)
     lambda_index = Setting(1)
+    repeatable = Setting(False)
 
+    # We define the UI for the widget
     def add_main_layout(self):
         form = QFormLayout()
         form.setFieldGrowthPolicy(form.AllNonFixedFieldsGrow)
         form.setLabelAlignment(Qt.AlignLeft)
+
         gui.widgetBox(self.controlArea, True, orientation=form)
+        # Spin box for the number of neurons in hidden layers
         form.addRow(
             "Neurons in hidden layers:",
             gui.spin(
@@ -70,6 +76,7 @@ class OWAdversarialDebiasing(OWBaseLearner):
                 callback=self.settings_changed,
             ),
         )
+        # Spin box for the number of epochs
         form.addRow(
             "Number of epochs:",
             gui.spin(
@@ -85,6 +92,7 @@ class OWAdversarialDebiasing(OWBaseLearner):
                 callback=self.settings_changed,
             ),
         )
+        # Spin box for the batch size
         form.addRow(
             "Batch size:",
             gui.spin(
@@ -100,19 +108,20 @@ class OWAdversarialDebiasing(OWBaseLearner):
                 callback=self.settings_changed,
             ),
         )
+        # Checkbox for the debiasing
         form.addRow(
             gui.checkBox(
                 None,
                 self,
                 "debias",
                 label="Use debiasing",
-                callback=self.settings_changed,
+                callback=[self.settings_changed, self._debias_changed],
                 attribute=Qt.WA_LayoutUsesWidgetRect,
             )
         )
-
+        # Slider for the lambda (adversary loss weight)
         self.reg_label = QLabel()
-        slider = gui.hSlider(
+        self.slider = gui.hSlider(
             None,
             self,
             "lambda_index",
@@ -121,20 +130,30 @@ class OWAdversarialDebiasing(OWBaseLearner):
             callback=lambda: (self.set_lambda(), self.settings_changed()),
             createLabel=False,
         )
-        form.addRow(self.reg_label, slider)
+        form.addRow(self.reg_label, self.slider)
+        # Checkbox for the replicable training
+        form.addRow(
+            gui.checkBox(
+                None,
+                self,
+                "repeatable",
+                label="Replicable training",
+                callback=self.settings_changed,
+                attribute=Qt.WA_LayoutUsesWidgetRect,
+            )
+        )
         self.set_lambda()
+        self._debias_changed()
 
+    # Responsible for the text of the lambda slider
     def set_lambda(self):
-        # called from init, pylint: disable=attribute-defined-outside-init
-        self.strength_C = self.lambdas[self.lambda_index]
-        self.reg_label.setText("Adversary Loss Weight, λ={}:".format(self.strength_C))
+        self.strength_D = self.lambdas[self.lambda_index]
+        self.reg_label.setText("Adversary Loss Weight, λ={}:".format(self.strength_D))
 
+    # Responsible for getting the lambda value from the index of the slider
     @property
     def selected_lambda(self):
         return self.lambdas[self.lambda_index]
-
-    def setup_layout(self):
-        return super().setup_layout()
 
     @Inputs.data
     def set_data(self, data):
@@ -146,18 +165,26 @@ class OWAdversarialDebiasing(OWBaseLearner):
         if self.model is not None:
             self.Outputs.model.send(self.model)
 
+    # Responsible for creating the learner with the parameters we want
+    # It is called in the superclass ?
     def create_learner(self):
-        return self.LEARNER(
-            classifier_num_hidden_units=self.hidden_layers_neurons,
-            num_epochs=self.number_of_epochs,
-            batch_size=self.batch_size,
-            debias=self.debias,
-            adversary_loss_weight=self.selected_lambda,
-        )
+        kwargs = {
+            "classifier_num_hidden_units": self.hidden_layers_neurons,
+            "num_epochs": self.number_of_epochs,
+            "batch_size": self.batch_size,
+            "debias": self.debias,
+            "adversary_loss_weight": 0,
+        }
+        if self.repeatable:
+            kwargs["seed"] = 42
+        if self.debias:
+            kwargs["adversary_loss_weight"] = self.selected_lambda  
+        return self.LEARNER(**kwargs)
 
     def handleNewSignals(self):
         self.apply()
 
+    # Responsible for enabling/disabling the slider
     def _debias_changed(self):
         self.slider.setEnabled(self.debias)
         self.apply()
@@ -177,5 +204,5 @@ class OWAdversarialDebiasing(OWBaseLearner):
 
 
 if __name__ == "__main__":
-    table = Table('http://datasets.biolab.si/core/melanoma.tab')
+    table = Table("http://datasets.biolab.si/core/melanoma.tab")
     WidgetPreview(OWAdversarialDebiasing).run(input_data=table)

@@ -130,7 +130,9 @@ class OWAdversarialDebiasing(OWBaseLearner):
             callback=lambda: (self.set_lambda(), self.settings_changed()),
             createLabel=False,
         )
-        form.addRow(self.reg_label, self.slider)
+        form.addRow(self.reg_label)
+        form.addRow(self.slider)
+        # form.addRow(self.reg_label, self.slider)
         # Checkbox for the replicable training
         form.addRow(
             gui.checkBox(
@@ -155,16 +157,6 @@ class OWAdversarialDebiasing(OWBaseLearner):
     def selected_lambda(self):
         return self.lambdas[self.lambda_index]
 
-    @Inputs.data
-    def set_data(self, data):
-        self.data = data
-        self.update_model()
-
-    def update_model(self):
-        super().update_model()
-        if self.model is not None:
-            self.Outputs.model.send(self.model)
-
     # Responsible for creating the learner with the parameters we want
     # It is called in the superclass ?
     def create_learner(self):
@@ -182,7 +174,7 @@ class OWAdversarialDebiasing(OWBaseLearner):
         return self.LEARNER(**kwargs)
 
     def handleNewSignals(self):
-        self.apply()
+        self.apply() # This calls the update_learner and update_model methods
 
     # Responsible for enabling/disabling the slider
     def _debias_changed(self):
@@ -201,6 +193,20 @@ class OWAdversarialDebiasing(OWBaseLearner):
             parameters.append(("Adversary Loss Weight", self.selected_lambda))
 
         return parameters
+
+
+    @Inputs.data
+    def set_data(self, data):
+        self.data = data
+        self.update_model()
+
+    # This method is called when the input data is changed
+    # it is responsible for fitting the learner and sending the created model to the output
+    # There is also a update_learner method which is called in the apply method of the superclass (along with update_model)
+    def update_model(self):
+        super().update_model()
+        if self.model is not None:
+            self.Outputs.model.send(self.model)
 
 
 if __name__ == "__main__":

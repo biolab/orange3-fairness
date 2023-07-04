@@ -68,6 +68,7 @@ class AdversarialDebiasingLearner(Learner):
         else:
             return self.fit(data)
         
+    # Function responsible for fitting the learner to the data and creating a model
     def fit(self, data: Table) -> AdversarialDebiasingModel:
         if not contains_fairness_attributes(data.domain):
             raise ValueError(MISSING_FAIRNESS_ATTRIBUTES)
@@ -90,6 +91,9 @@ class AdversarialDebiasingLearner(Learner):
         model = model.fit(standardDataset)
         return AdversarialDebiasingModel(model=model, domain=data.domain)
     
+
+    # This is called when using the learner as a function, in the superclass it uses the _fit_model function
+    # Which creates a new model by calling the fit function
     def __call__(self, data, progress_callback=None):
         m = super().__call__(data, progress_callback)
         m.params = self.params

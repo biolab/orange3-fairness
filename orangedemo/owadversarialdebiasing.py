@@ -5,6 +5,8 @@ from Orange.widgets.settings import Setting
 from Orange.widgets.utils.owlearnerwidget import OWBaseLearner
 from Orange.data import Table
 from Orange.widgets.utils.widgetpreview import WidgetPreview
+from Orange.widgets.utils.concurrent import TaskState, ConcurrentWidgetMixin
+from Orange.base import Model
 
 from AnyQt.QtWidgets import QFormLayout, QLabel
 from AnyQt.QtCore import Qt
@@ -12,8 +14,7 @@ from AnyQt.QtCore import Qt
 from orangedemo.modeling.adversarial import AdversarialDebiasingLearner
 
 
-
-class OWAdversarialDebiasing(OWBaseLearner):
+class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     name = "Adversarial Debiasing"
     description = "Adversarial Debiasing classification algorithm with or without fairness constraints."
     # icon = "icons/AdversarialDebiasing.svg"
@@ -52,6 +53,12 @@ class OWAdversarialDebiasing(OWBaseLearner):
     debias = Setting(True)
     lambda_index = Setting(1)
     repeatable = Setting(False)
+
+
+    def __init__(self):
+        ConcurrentWidgetMixin.__init__(self)
+        OWBaseLearner.__init__(self)
+
 
     # We define the UI for the widget
     def add_main_layout(self):
@@ -158,7 +165,7 @@ class OWAdversarialDebiasing(OWBaseLearner):
         return self.lambdas[self.lambda_index]
 
     # Responsible for creating the learner with the parameters we want
-    # It is called in the superclass ?
+    # It is called in the superclass by the update_learner method
     def create_learner(self):
         kwargs = {
             "classifier_num_hidden_units": self.hidden_layers_neurons,
@@ -204,9 +211,29 @@ class OWAdversarialDebiasing(OWBaseLearner):
     # it is responsible for fitting the learner and sending the created model to the output
     # There is also a update_learner method which is called in the apply method of the superclass (along with update_model)
     def update_model(self):
-        super().update_model()
-        if self.model is not None:
-            self.Outputs.model.send(self.model)
+        # This method will run the run_task method in a separate thread and pass the learner and data as arguments
+        if self.data is not None:
+            self.start(self.run_task, self.create_learner(), self.data)
+        else:
+            self.Outputs.model.send(None)
+
+    def run_task(self, learner: AdversarialDebiasingLearner, data: Table, state: TaskState) -> Model:
+        model = learner(data)
+        return model
+
+    def on_partial_result(self, _):
+        pass
+
+    def on_done(self, result: Model):
+        assert isinstance(result, Model) or result is None
+        self.Outputs.model.send(result)
+
+    def on_exception(self, ex):
+        raise ex
+
+    def onDeleteWidget(self):
+        self.shutdown()
+        super().onDeleteWidget()
 
 
 if __name__ == "__main__":

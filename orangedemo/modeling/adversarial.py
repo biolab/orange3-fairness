@@ -1,6 +1,5 @@
-from typing import Optional
 from Orange.base import Learner, Model
-from Orange.data import Table, Storage, Domain, table_from_frame
+from Orange.data import Table
 
 from aif360.algorithms.inprocessing import AdversarialDebiasing
 import tensorflow.compat.v1 as tf

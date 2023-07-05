@@ -29,10 +29,10 @@ class OWAsFairness(OWWidget):
 
     #Settings: The favorable_class, protected_attribute, and privileged_values are instance variables that are declared as ContextSetting. A ContextSetting is a special type of Setting that Orange remembers for each different context (i.e., input data domain).
     settingsHandler = DomainContextHandler(match_values=DomainContextHandler.MATCH_VALUES_ALL)
-    protected_attribute = ContextSetting(None, schema_only=True) #schema_only -> The setting is saved within the workflow but the default never changes.
-    favorable_class_value = ContextSetting("", schema_only=True)
-    privileged_PA_values = ContextSetting([], schema_only=True)
-    auto_commit: bool = Setting(True, schema_only=True)
+    protected_attribute = ContextSetting(None) 
+    favorable_class_value = ContextSetting("")
+    privileged_PA_values = ContextSetting([])
+    auto_commit: bool = Setting(True, schema_only=True) #schema_only -> The setting is saved within the workflow but the default never changes.
 
 
     def __init__(self, *args, **kwargs):
@@ -78,26 +78,40 @@ class OWAsFairness(OWWidget):
             # This Domain object represents the structure of the input data (i.e., the variables it contains).
             domain = Domain(data.domain.attributes + data.domain.class_vars)
 
+        
             # Changes the domain of the comboboxes to the new domain, thus updating the list of variables that can be selected.
             self.controls.protected_attribute.model().set_domain(domain)
     
+
+            # Clear the old values of the favorable_class_items_model PyListModel
+            if self.controls.favorable_class_value.model():
+                self.controls.favorable_class_value.model().clear()
             # Fill the favorable_class_items_model PyListModel with the values of the class variable of the input data.
             for value in data.domain.class_vars[0].values:
                 self.controls.favorable_class_value.model().append(value)
 
+
+            # Clear the old values of the privileged_PA_values_model PyListModel
+            if self.controls.privileged_PA_values.model():
+                self.controls.privileged_PA_values.model().clear()
             # Fill the privileged_PA_values_model PyListModel with the values of the protected attribute variable of the input data.
             for value in self.controls.protected_attribute.model()[0].values:
                 self.controls.privileged_PA_values.model().append(value)
+
 
             # Set the selected variables to the first variable in the list of variables (in the comboboxes or listboxes)
             self.protected_attribute = self.controls.protected_attribute.model()[0] if len(self.controls.protected_attribute.model()) else None
             self.favorable_class_value = self.controls.favorable_class_value.model()[0] if len(self.controls.favorable_class_value.model()) else None
             self.privileged_PA_values = [self.controls.privileged_PA_values.model()[0]] if len(self.controls.privileged_PA_values.model()) else []
 
+
             # If atleast one value for each variable is selected, then open the context for the widget using the new domain
             # This means that these settings will be remembered the next time the widget receives the same input data.
             if self.protected_attribute is not None and self.favorable_class_value is not None and len(self.controls.privileged_PA_values.model()) > 0:
                 self.openContext(domain)
+                # Call changeValues in case the openContext changed the protected attribute variable
+                self.changeValues() 
+
 
         # Apply the changes and send the data to the output
         self.commit.now() # In the set_data we always have a commit.now() instead of a commit.deferred() because we want to apply the changes as soon as the input data changes.
@@ -143,14 +157,14 @@ class OWAsFairness(OWWidget):
     def commit(self) -> None:
         if self._data is not None:
             data = self.as_fairness_data(self._data)
-
-            data.attributes['favorable_class_value'] = str(self.favorable_class_value)
-            data.attributes['protected_attribute'] = str(self.protected_attribute)
-            data.attributes['privileged_PA_values'] = self.privileged_PA_values
+            if data is not None:
+                data.attributes['favorable_class_value'] = str(self.favorable_class_value)
+                data.attributes['protected_attribute'] = str(self.protected_attribute)
+                data.attributes['privileged_PA_values'] = self.privileged_PA_values
         
         self.Outputs.data.send(data)
         
 
 if __name__ == "__main__":
-    table = Table('iris.tab')
+    table = Table('zoo.tab')
     WidgetPreview(OWAsFairness).run(input_data=table)

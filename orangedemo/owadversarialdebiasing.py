@@ -8,6 +8,10 @@ from Orange.widgets.utils.widgetpreview import WidgetPreview
 from Orange.widgets.utils.concurrent import TaskState, ConcurrentWidgetMixin
 from Orange.base import Model
 
+# Preprocessors
+# from Orange.preprocess import Impute, Normalize
+# from Orange.preprocess.impute import DropInstances, Average
+
 from AnyQt.QtWidgets import QFormLayout, QLabel
 from AnyQt.QtCore import Qt
 
@@ -57,7 +61,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
     def __init__(self):
         ConcurrentWidgetMixin.__init__(self)
-        OWBaseLearner.__init__(self)
+        OWBaseLearner.__init__(self) # preprocessors=[Impute(Average()), Normalize()]
 
 
     # We define the UI for the widget
@@ -178,7 +182,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
             kwargs["seed"] = 42
         if self.debias:
             kwargs["adversary_loss_weight"] = self.selected_lambda  
-        return self.LEARNER(**kwargs)
+        return self.LEARNER(**kwargs, preprocessors=self.preprocessors)
 
     def handleNewSignals(self):
         self.apply() # This calls the update_learner and update_model methods

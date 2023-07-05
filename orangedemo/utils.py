@@ -22,6 +22,7 @@ def table_to_standard_dataset(data) -> None:
         # Convert Orange data to aif360 dataset, it returns a touple xdf, ydf, mdf
         xdf, ydf, mdf = data.to_pandas_dfs()
         # Merge xdf and ydf TODO: Check if I need to merge mdf
+        # This dataframe consists of all the data, the categorical variables are ordinal encoded
         df = ydf.merge(xdf, left_index=True, right_index=True)
 
         # TODO: Change this so it reads these values from the domain
@@ -45,8 +46,7 @@ def table_to_standard_dataset(data) -> None:
         # If the data is from a "predict" function call and does not contain the class variable we need to add it and assign it to one of the values
         # This is because the aif360 StandardDataset requires the class variable to be present even if we will not use it so we can assign it to any value
         if data.domain.class_var.name not in df.columns:
-            df[data.domain.class_var.name] = favorable_class_value
-
+            df[data.domain.class_var.name] = 0
 
 
         # Create the StandardDataset, this is the dataset that aif360 uses

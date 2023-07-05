@@ -147,10 +147,6 @@ class OWAsFairness(OWWidget):
             data.attributes['favorable_class_value'] = str(self.favorable_class_value)
             data.attributes['protected_attribute'] = str(self.protected_attribute)
             data.attributes['privileged_PA_values'] = self.privileged_PA_values
-
-            # print(self._data.attributes['favorable_class_value'])
-            # print(self._data.attributes['protected_attribute'])
-            # print(self._data.attributes['privileged_PA_values'])
         
         self.Outputs.data.send(data)
         

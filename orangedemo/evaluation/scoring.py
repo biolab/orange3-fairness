@@ -22,7 +22,10 @@ class FairnessScorer(Score, abstract=True):
     
     # This method is called by the Orange framework, together with the metric method it computes the specific score
     def compute_score(self, results):
+
         dataset, privileged_groups, unprivileged_groups = table_to_standard_dataset(results.data)
+        # We need to subset the created dataset so that it will match the shape/order of the predictions if some of the data was used multiple times
+        dataset = dataset.subset(results.row_indices)
         dataset_pred = dataset.copy()
         dataset_pred.labels = results.predicted
         classification_metric = ClassificationMetric(dataset, dataset_pred, unprivileged_groups=unprivileged_groups, privileged_groups=privileged_groups)

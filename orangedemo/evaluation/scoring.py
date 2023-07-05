@@ -7,7 +7,13 @@ from aif360.metrics import ClassificationMetric
 from orangedemo.utils import table_to_standard_dataset, contains_fairness_attributes
 
 
-__all__ = ["StatisticalParityDifference", "EqualOpportunityDifference", "AverageOddsDifference", "DisparateImpact"]
+__all__ = [
+    "StatisticalParityDifference",
+    "EqualOpportunityDifference",
+    "AverageOddsDifference",
+    "DisparateImpact",
+]
+
 
 class FairnessScorer(Score, abstract=True):
     class_types = (
@@ -19,7 +25,7 @@ class FairnessScorer(Score, abstract=True):
     @staticmethod
     def is_compatible(domain: Domain) -> bool:
         return contains_fairness_attributes(domain)
-    
+
     # This method is called by the Orange framework, together with the metric method it computes the specific score
     def compute_score(self, results):
 
@@ -28,13 +34,19 @@ class FairnessScorer(Score, abstract=True):
         dataset = dataset.subset(results.row_indices)
         dataset_pred = dataset.copy()
         dataset_pred.labels = results.predicted
-        classification_metric = ClassificationMetric(dataset, dataset_pred, unprivileged_groups=unprivileged_groups, privileged_groups=privileged_groups)
+        classification_metric = ClassificationMetric(
+            dataset,
+            dataset_pred,
+            unprivileged_groups=unprivileged_groups,
+            privileged_groups=privileged_groups,
+        )
         return [self.metric(classification_metric)]
-    
+
     # This indicates that the metric method needs to be implemented by the subclasses
     @abstractmethod
     def metric(self, classification_metric):
         pass
+
 
 class StatisticalParityDifference(FairnessScorer):
     name = "SPD"
@@ -43,6 +55,7 @@ class StatisticalParityDifference(FairnessScorer):
     def metric(self, classificationMetric):
         return classificationMetric.statistical_parity_difference()
 
+
 class EqualOpportunityDifference(FairnessScorer):
     name = "EOD"
     long_name = "Equal Opportunity Difference"
@@ -50,12 +63,14 @@ class EqualOpportunityDifference(FairnessScorer):
     def metric(self, classificationMetric):
         return classificationMetric.equal_opportunity_difference()
 
+
 class AverageOddsDifference(FairnessScorer):
     name = "AOD"
     long_name = "Average Odds Difference"
 
     def metric(self, classificationMetric):
         return classificationMetric.average_odds_difference()
+
 
 class DisparateImpact(FairnessScorer):
     name = "DI"

@@ -17,7 +17,7 @@ class OWDatasetBias(OWWidget):
 
     want_control_area = False
     resizing_enabled = False
-    
+
     class Inputs:
         data = Input("Data", Table)
 
@@ -30,7 +30,12 @@ class OWDatasetBias(OWWidget):
 
     @Inputs.data
     def set_data(self, data: Optional[Table]) -> None:
-        if not data or not "favorable_class_value" in data.attributes or not "protected_attribute" in data.attributes or not "privileged_PA_values" in data.attributes:
+        if (
+            not data
+            or not "favorable_class_value" in data.attributes
+            or not "protected_attribute" in data.attributes
+            or not "privileged_PA_values" in data.attributes
+        ):
             return
 
         # Convert Orange data to aif360 StandardDataset

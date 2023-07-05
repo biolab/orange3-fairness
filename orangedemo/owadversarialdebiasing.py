@@ -58,11 +58,9 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     lambda_index = Setting(1)
     repeatable = Setting(False)
 
-
     def __init__(self):
         ConcurrentWidgetMixin.__init__(self)
-        OWBaseLearner.__init__(self) # preprocessors=[Impute(Average()), Normalize()]
-
+        OWBaseLearner.__init__(self)  # preprocessors=[Impute(Average()), Normalize()]
 
     # We define the UI for the widget
     def add_main_layout(self):
@@ -181,11 +179,11 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         if self.repeatable:
             kwargs["seed"] = 42
         if self.debias:
-            kwargs["adversary_loss_weight"] = self.selected_lambda  
+            kwargs["adversary_loss_weight"] = self.selected_lambda
         return self.LEARNER(**kwargs, preprocessors=self.preprocessors)
 
     def handleNewSignals(self):
-        self.apply() # This calls the update_learner and update_model methods
+        self.apply()  # This calls the update_learner and update_model methods
 
     # Responsible for enabling/disabling the slider
     def _debias_changed(self):
@@ -205,7 +203,6 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
         return parameters
 
-
     @Inputs.data
     def set_data(self, data):
         self.data = data
@@ -221,7 +218,9 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         else:
             self.Outputs.model.send(None)
 
-    def run_task(self, learner: AdversarialDebiasingLearner, data: Table, state: TaskState) -> Model:
+    def run_task(
+        self, learner: AdversarialDebiasingLearner, data: Table, state: TaskState
+    ) -> Model:
         model = learner(data)
         return model
 

@@ -27,7 +27,7 @@ class MzCom:
         data = self.model.transform(data)
         # Return the weights
         return data.instance_weights
-    
+
     # TODO: Check if this is ok
     InheritEq = True
 

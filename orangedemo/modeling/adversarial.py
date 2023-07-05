@@ -4,9 +4,14 @@ from Orange.data import Table
 from aif360.algorithms.inprocessing import AdversarialDebiasing
 import tensorflow.compat.v1 as tf
 
-from orangedemo.utils import table_to_standard_dataset, contains_fairness_attributes, MISSING_FAIRNESS_ATTRIBUTES
+from orangedemo.utils import (
+    table_to_standard_dataset,
+    contains_fairness_attributes,
+    MISSING_FAIRNESS_ATTRIBUTES,
+)
 
 import numpy as np
+
 
 # This gets called after the model is created and fitted
 # It is stored so we can use it to predict on new data
@@ -21,31 +26,31 @@ class AdversarialDebiasingModel(Model):
             # For creating the standard dataset we need to know the encoding the table uses for the class variable, the encoding is ordinal and is the same as the order of values in the domain
             if not data.domain.class_var:
                 data.domain.class_var = self.original_domain.class_var
-            standard_dataset,_,_ = table_to_standard_dataset(data)
+            standard_dataset, _, _ = table_to_standard_dataset(data)
             predictions = self._model.predict(standard_dataset)
 
             # Create a array of scores with a column for each class the first column is the predictions.scores and the second column is 1 - predictions.scores
             # TODO: Check if the order of the columns is always correct
-            scores = np.hstack((predictions.scores, (1 - predictions.scores).reshape(-1, 1)))
+            scores = np.hstack(
+                (predictions.scores, (1 - predictions.scores).reshape(-1, 1))
+            )
 
             # Flip the prediction.labels, if the value is 0 we want to return 1 and vice versa
-            # TODO: Find out why this is needed (if we don't do this the predictions are the opposite of what they should be, but why ? -> maybe because of the way the data is encoded (once by the Table class and once by the StandardDataset) ?) 
+            # TODO: Find out why this is needed (if we don't do this the predictions are the opposite of what they should be, but why ? -> maybe because of the way the data is encoded (once by the Table class and once by the StandardDataset) ?)
             predictions.labels = np.logical_not(predictions.labels)
 
             return np.squeeze(predictions.labels, axis=1), scores
         else:
             raise TypeError("Data is not of type Table")
-    
+
     def predict_storage(self, data):
-            if isinstance(data, Table):
-                return self.predict(data)
-            else:
-                raise TypeError("Data is not of type Table")
-    
+        if isinstance(data, Table):
+            return self.predict(data)
+        else:
+            raise TypeError("Data is not of type Table")
+
     def __call__(self, data, ret=Model.Value):
         return self.predict_storage(data)
-
-
 
 
 class AdversarialDebiasingLearner(Learner):
@@ -58,16 +63,16 @@ class AdversarialDebiasingLearner(Learner):
     def incompatibility_reason(self, domain):
         if not contains_fairness_attributes(domain):
             return MISSING_FAIRNESS_ATTRIBUTES
-        
+
     def fit_storage(self, data):
         return self.fit(data)
-    
+
     def _fit_model(self, data):
         if type(self).fit is Learner.fit:
             return self.fit_storage(data)
         else:
             return self.fit(data)
-        
+
     # Function responsible for fitting the learner to the data and creating a model
     def fit(self, data: Table) -> AdversarialDebiasingModel:
         if not contains_fairness_attributes(data.domain):
@@ -85,10 +90,15 @@ class AdversarialDebiasingLearner(Learner):
 
         # Create a model using the parameters from the widget and fit it to the data
         # **self.params["kwargs"] unpacks the dictionary self.params["kwargs"] into keyword arguments
-        model = AdversarialDebiasing(**self.params["kwargs"], unprivileged_groups=unprivileged_groups, privileged_groups=privileged_groups, sess=sess, scope_name="adversarial_debiasing")
+        model = AdversarialDebiasing(
+            **self.params["kwargs"],
+            unprivileged_groups=unprivileged_groups,
+            privileged_groups=privileged_groups,
+            sess=sess,
+            scope_name="adversarial_debiasing"
+        )
         model = model.fit(standardDataset)
         return AdversarialDebiasingModel(model=model)
-    
 
     # This is called when using the learner as a function, in the superclass it uses the _fit_model function
     # Which creates a new model by calling the fit function
@@ -96,4 +106,3 @@ class AdversarialDebiasingLearner(Learner):
         model = super().__call__(data, progress_callback)
         model.params = self.params
         return model
-    

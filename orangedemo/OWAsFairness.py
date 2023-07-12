@@ -5,8 +5,10 @@ from Orange.widgets.settings import ContextSetting, DomainContextHandler, Settin
 from Orange.widgets.widget import Input, Output, OWWidget
 from Orange.widgets.utils.itemmodels import DomainModel, PyListModel
 from Orange.data import Table, Domain, DiscreteVariable
+from Orange.preprocess import RemoveNaNRows
 
 from Orange.widgets.utils.widgetpreview import WidgetPreview
+
 
 
 class OWAsFairness(OWWidget):
@@ -89,6 +91,9 @@ class OWAsFairness(OWWidget):
         domain: Optional[Domain] = None
 
         if data:
+            # First impute the data, by removing all rows with missing values
+            data = RemoveNaNRows()(data)
+
             # Create a table with the same data but a different domain
             self._data = data.transform(data.domain)
             # Copy the attributes from the original data to the new data

@@ -8,10 +8,6 @@ from Orange.widgets.utils.widgetpreview import WidgetPreview
 from Orange.widgets.utils.concurrent import TaskState, ConcurrentWidgetMixin
 from Orange.base import Model
 
-# Preprocessors
-# from Orange.preprocess import Impute, Normalize
-# from Orange.preprocess.impute import DropInstances, Average
-
 from AnyQt.QtWidgets import QFormLayout, QLabel
 from AnyQt.QtCore import Qt
 
@@ -60,7 +56,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
     def __init__(self):
         ConcurrentWidgetMixin.__init__(self)
-        OWBaseLearner.__init__(self)  # preprocessors=[Impute(Average()), Normalize()]
+        OWBaseLearner.__init__(self)
 
     # We define the UI for the widget
     def add_main_layout(self):
@@ -180,7 +176,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
             kwargs["seed"] = 42
         if self.debias:
             kwargs["adversary_loss_weight"] = self.selected_lambda
-        return self.LEARNER(**kwargs, preprocessors=self.preprocessors)
+        return self.LEARNER(**kwargs)
 
     def handleNewSignals(self):
         self.apply()  # This calls the update_learner and update_model methods
@@ -207,6 +203,11 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     def set_data(self, data):
         self.data = data
         self.update_model()
+
+    # @Inputs.preprocessor
+    # def set_preprocessor(self, preprocessor):
+    #     self.preprocessor = preprocessor
+    #     self.update_model()
 
     # This method is called when the input data is changed
     # it is responsible for fitting the learner and sending the created model to the output

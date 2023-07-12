@@ -1,5 +1,6 @@
 from Orange.base import Learner, Model
 from Orange.data import Table
+from Orange.preprocess import Normalize
 
 from aif360.algorithms.inprocessing import AdversarialDebiasing
 import tensorflow.compat.v1 as tf
@@ -16,13 +17,16 @@ import numpy as np
 # This gets called after the model is created and fitted
 # It is stored so we can use it to predict on new data
 class AdversarialDebiasingModel(Model):
-    def __init__(self, model):
+    def __init__(self, model, learner):
         super().__init__()
         self._model = model
+        self.learner = learner
         self.params = vars()
 
     def predict(self, data):
         if isinstance(data, Table):
+            # Normalize the data
+            data = self.learner.preprocess(data)
             # For creating the standard dataset we need to know the encoding the table uses for the class variable, the encoding is ordinal and is the same as the order of values in the domain
             if not data.domain.class_var:
                 data.domain.class_var = self.original_domain.class_var
@@ -55,6 +59,10 @@ class AdversarialDebiasingModel(Model):
 
 class AdversarialDebiasingLearner(Learner):
     __returns__ = AdversarialDebiasingModel
+    name = "Adversarial Debiasing"
+    preprocessors = [
+        Normalize()
+    ]
 
     def __init__(self, preprocessors=None, **kwargs):
         self.params = vars()
@@ -74,6 +82,7 @@ class AdversarialDebiasingLearner(Learner):
             return self.fit(data)
 
     # Function responsible for fitting the learner to the data and creating a model
+    # TODO: Should I use the X,Y,W format instead of the table format ?
     def fit(self, data: Table) -> AdversarialDebiasingModel:
         if not contains_fairness_attributes(data.domain):
             raise ValueError(MISSING_FAIRNESS_ATTRIBUTES)
@@ -98,7 +107,7 @@ class AdversarialDebiasingLearner(Learner):
             scope_name="adversarial_debiasing"
         )
         model = model.fit(standardDataset)
-        return AdversarialDebiasingModel(model=model)
+        return AdversarialDebiasingModel(model=model, learner=self)
 
     # This is called when using the learner as a function, in the superclass it uses the _fit_model function
     # Which creates a new model by calling the fit function

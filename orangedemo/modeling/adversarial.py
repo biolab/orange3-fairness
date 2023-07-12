@@ -41,7 +41,7 @@ class AdversarialDebiasingModel(Model):
 
             # Flip the prediction.labels, if the value is 0 we want to return 1 and vice versa
             # TODO: Find out why this is needed (if we don't do this the predictions are the opposite of what they should be, but why ? -> maybe because of the way the data is encoded (once by the Table class and once by the StandardDataset) ?)
-            predictions.labels = np.logical_not(predictions.labels)
+            # predictions.labels = np.logical_not(predictions.labels)
 
             return np.squeeze(predictions.labels, axis=1), scores
         else:

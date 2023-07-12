@@ -26,16 +26,24 @@ class OWDatasetBias(OWWidget):
 
         box = gui.vBox(self.mainArea, "Bias")
         self.disparate_impact_label = gui.label(box, self, "No data detected.")
-        self.statistical_parity_difference_label = gui.label(box, self, "No data detected.")
+        self.statistical_parity_difference_label = gui.label(box, self, "")
 
     @Inputs.data
     def set_data(self, data: Optional[Table]) -> None:
         if (
             not data
-            or not "favorable_class_value" in data.attributes
+        ):
+            self.disparate_impact_label.setText("No data detected.")
+            self.statistical_parity_difference_label.setText("")
+            return
+        
+        elif (
+            not "favorable_class_value" in data.attributes
             or not "protected_attribute" in data.attributes
             or not "privileged_PA_values" in data.attributes
         ):
+            self.disparate_impact_label.setText("The dataset is not suitable for bias computation.")
+            self.statistical_parity_difference_label.setText("Pass the dataset through the 'As Fairness' widget first")
             return
 
         # Convert Orange data to aif360 StandardDataset
@@ -43,6 +51,8 @@ class OWDatasetBias(OWWidget):
 
         # Compute the bias of the dataset (disparate impact and statistical parity difference)
         dataset_metric = BinaryLabelDatasetMetric(standard_dataset, unprivileged_groups, privileged_groups)
-        self.disparate_impact_label.setText(f"Disparate Impact (ideal = 1): {dataset_metric.disparate_impact()}")
-        self.statistical_parity_difference_label.setText(f"Statistical Parity Difference (ideal = 0): {dataset_metric.statistical_parity_difference()}")
+        disparate_impact = dataset_metric.disparate_impact()
+        statistical_parity_difference = dataset_metric.statistical_parity_difference()
+        self.disparate_impact_label.setText(f"Disparate Impact (ideal = 1): {round(disparate_impact, 3)}")
+        self.statistical_parity_difference_label.setText(f"Statistical Parity Difference (ideal = 0): {round(statistical_parity_difference, 3)}")
         

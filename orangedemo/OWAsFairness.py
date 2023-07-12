@@ -90,7 +90,7 @@ class OWAsFairness(OWWidget):
         self._data = None
         domain: Optional[Domain] = None
 
-        if data:
+        if data is not None:
             # First impute the data, by removing all rows with missing values
             data = RemoveNaNRows()(data)
 
@@ -193,6 +193,7 @@ class OWAsFairness(OWWidget):
     # It changes the data attributes and outputs the data
     @gui.deferred  # The defered allows us to only call the function once the user has stopped changing the values of the comboboxes or listboxes and "Applies" the changes
     def commit(self) -> None:
+        data = None
         if self._data is not None:
             data = self.as_fairness_data(self._data)
             if data is not None:

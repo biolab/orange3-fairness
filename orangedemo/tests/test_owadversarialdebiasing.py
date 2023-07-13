@@ -27,10 +27,23 @@ class TestOWAdversarialDebiasing(WidgetTest):
         simulate.combobox_activate_item(
             self.as_fairness.controls.favorable_class_value, ">50K"
         )
-        simulate.combobox_activate_item(self.as_fairness.controls.protected_attribute, "sex")
+        simulate.combobox_activate_item(
+            self.as_fairness.controls.protected_attribute, "sex"
+        )
         select_rows(self.as_fairness.controls.privileged_PA_values, [1])
         output_data = self.get_output(self.as_fairness.Outputs.data)
         return output_data
+
+    def print_metrics(self, results):
+        print(f"ROC AUC: {scoring.AUC(results)}")
+        print(f"CA: {scoring.CA(results)}")
+        print(f"F1: {scoring.F1(results)}")
+        print(f"Precision: {scoring.Precision(results)}")
+        print(f"Recall: {scoring.Recall(results)}")
+        print(f"SPD: {bias_scoring.StatisticalParityDifference(results)}")
+        print(f"EOD: {bias_scoring.EqualOpportunityDifference(results)}")
+        print(f"AOD: {bias_scoring.AverageOddsDifference(results)}")
+        print(f"DI: {bias_scoring.DisparateImpact(results)}")
 
     def test_no_data(self):
         """Check that the widget doesn't crash on empty data"""
@@ -56,7 +69,7 @@ class TestOWAdversarialDebiasing(WidgetTest):
         """Check if the widget works with cross validation"""
         self.widget.number_of_epochs = 10
         self.widget.debias = False
-        
+
         test_data = self.as_fairness_setup()
         self.send_signal(
             self.widget.Inputs.data,
@@ -70,15 +83,7 @@ class TestOWAdversarialDebiasing(WidgetTest):
 
         self.assertIsNotNone(results)
         print("Cross validation results:")
-        print(f"ROC AUC: {scoring.AUC(results)}")
-        print(f"CA: {scoring.CA(results)}")
-        print(f"F1: {scoring.F1(results)}")
-        print(f"Precision: {scoring.Precision(results)}")
-        print(f"Recall: {scoring.Recall(results)}")
-        print(f"SPD: {bias_scoring.StatisticalParityDifference(results)}")
-        print(f"EOD: {bias_scoring.EqualOpportunityDifference(results)}")
-        print(f"AOD: {bias_scoring.AverageOddsDifference(results)}")
-        print(f"DI: {bias_scoring.DisparateImpact(results)}")
+        self.print_metrics(results)
 
     def test_train_test_split(self):
         """Check if the widget works with a normal train-test split"""
@@ -98,15 +103,7 @@ class TestOWAdversarialDebiasing(WidgetTest):
 
         self.assertIsNotNone(results)
         print("Train test split results:")
-        print(f"ROC AUC: {scoring.AUC(results)}")
-        print(f"CA: {scoring.CA(results)}")
-        print(f"F1: {scoring.F1(results)}")
-        print(f"Precision: {scoring.Precision(results)}")
-        print(f"Recall: {scoring.Recall(results)}")
-        print(f"SPD: {bias_scoring.StatisticalParityDifference(results)}")
-        print(f"EOD: {bias_scoring.EqualOpportunityDifference(results)}")
-        print(f"AOD: {bias_scoring.AverageOddsDifference(results)}")
-        print(f"DI: {bias_scoring.DisparateImpact(results)}")
+        self.print_metrics(results)
 
 
 if __name__ == "__main__":

@@ -25,11 +25,12 @@ class TestOWReweighing(WidgetTest):
         simulate.combobox_activate_item(
             self.as_fairness.controls.favorable_class_value, ">50K"
         )
-        simulate.combobox_activate_item(self.as_fairness.controls.protected_attribute, "sex")
+        simulate.combobox_activate_item(
+            self.as_fairness.controls.protected_attribute, "sex"
+        )
         select_rows(self.as_fairness.controls.privileged_PA_values, [1])
         output_data = self.get_output(self.as_fairness.Outputs.data)
         return output_data
-
 
     def test_no_data(self):
         """Check that the widget doesn't crash on empty data"""
@@ -54,6 +55,7 @@ class TestOWReweighing(WidgetTest):
         preprocessed_data = preprocessor(test_data)
         self.assertIsNotNone(preprocessed_data)
         self.assertIn("weights", preprocessed_data.domain)
+
 
 if __name__ == "__main__":
     unittest.main()

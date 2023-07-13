@@ -1,9 +1,15 @@
 from Orange.base import Learner
 from Orange.data import Table
+from Orange.widgets.settings import Setting
 from Orange.widgets.utils.owlearnerwidget import OWBaseLearner
 from Orange.widgets.widget import Input
+from Orange.widgets import gui
+
+from AnyQt.QtWidgets import QFormLayout, QLabel
+from AnyQt.QtCore import Qt
 
 from orangedemo.modeling.postprocessing import PostprocessingLearner
+
 
 class OWEqualizedOdds(OWBaseLearner):
     name = "Equalized Odds Postprocessing"
@@ -12,6 +18,7 @@ class OWEqualizedOdds(OWBaseLearner):
     # priority = 10
 
     LEARNER = PostprocessingLearner
+    repeatable = Setting(True)
 
     class Inputs(OWBaseLearner.Inputs):
         learner = Input("Learner", Learner)
@@ -19,9 +26,22 @@ class OWEqualizedOdds(OWBaseLearner):
     def __init__(self):
         self.normal_learner: Learner = None
         super().__init__()
-    
+
     def add_main_layout(self):
-        pass
+        form = QFormLayout()
+        form.setFieldGrowthPolicy(form.AllNonFixedFieldsGrow)
+        form.setLabelAlignment(Qt.AlignLeft)
+        gui.widgetBox(self.controlArea, True, orientation=form)
+        form.addRow(
+            gui.checkBox(
+                None,
+                self,
+                "repeatable",
+                label="Replicable training",
+                callback=self.settings_changed,
+                attribute=Qt.WA_LayoutUsesWidgetRect,
+            )
+        )
 
     @Inputs.learner
     def set_learner(self, learner: Learner):
@@ -34,9 +54,8 @@ class OWEqualizedOdds(OWBaseLearner):
         return self.LEARNER(
             self.normal_learner,
             preprocessors=self.preprocessors,
+            repeatable=self.repeatable,
         )
-    
-    
 
 
 if __name__ == "__main__":
@@ -45,6 +64,8 @@ if __name__ == "__main__":
     from Orange.classification.logistic_regression import LogisticRegressionLearner
     from Orange.widgets.evaluate.owpredictions import OWPredictions
     from Orange.widgets.utils.widgetpreview import WidgetPreview
+
+    WidgetPreview(OWEqualizedOdds).run()
 
     a = QApplication(sys.argv)
     table = Table("orangedemo/tests/datasets/adult_fairness.tab")
@@ -58,8 +79,3 @@ if __name__ == "__main__":
     predictions_widget.set_data(table)
     predictions_widget.insert_predictor(0, model)
     predictions_widget.handleNewSignals()
-
-
-
-
-

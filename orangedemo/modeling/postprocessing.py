@@ -33,10 +33,12 @@ class PostprocessingModel(Model):
                 data.domain.class_var = self.original_domain.class_var
             standard_dataset, _, _ = table_to_standard_dataset(data)
             standard_dataset_pred = standard_dataset.copy(deepcopy=True)
-            standard_dataset_pred.labels = predictions.reshape(-1,1)
+            standard_dataset_pred.labels = predictions.reshape(-1, 1)
 
             # Postprocess the predictions
-            standard_dataset_pred_transf = self.postprocessor.predict(standard_dataset_pred)
+            standard_dataset_pred_transf = self.postprocessor.predict(
+                standard_dataset_pred
+            )
 
             # Return the postprocessed predictions and the scores
             return np.squeeze(standard_dataset_pred_transf.labels, axis=1), scores
@@ -50,13 +52,14 @@ class PostprocessingModel(Model):
     def __call__(self, data, ret=Model.Value):
         return self.predict_storage(data)
 
-class PostprocessingLearner(Learner):
 
+class PostprocessingLearner(Learner):
     __returns__ = PostprocessingModel
 
-    def __init__(self, learner, preprocessors=None):
+    def __init__(self, learner, preprocessors=None, repeatable=None):
         super().__init__(preprocessors=preprocessors)
         self.learner = learner
+        self.seed = 42 if repeatable else None
         self.params = vars()
 
     def incompatibility_reason(self, domain):
@@ -70,7 +73,7 @@ class PostprocessingLearner(Learner):
             raise ValueError(MISSING_FAIRNESS_ATTRIBUTES)
         else:
             raise TypeError("Data is not of type Table")
-        
+
     def _fit_model(self, data):
         if type(self).fit is Learner.fit:
             return self.fit_storage(data)
@@ -86,14 +89,24 @@ class PostprocessingLearner(Learner):
 
             # Fit the model TODO: Split the data into train and test data so we can fit the postprocessor on the test data to avoid data leakage
             model = self.learner.fit_storage(data)
-            predictions, _ = model.predict_storage(data) # Returns the predictions and the scores
+            predictions, _ = model.predict_storage(
+                data
+            )  # Returns the predictions and the scores
 
-            # Get the predictions which will be used to fit the postprocessor  
-            # Fit the postprocessor TODO: Add a option for setting a seed
-            standard_dataset, privileged_groups, unprivileged_groups = table_to_standard_dataset(data)
+            # Get the predictions which will be used to fit the postprocessor
+            (
+                standard_dataset,
+                privileged_groups,
+                unprivileged_groups,
+            ) = table_to_standard_dataset(data)
             standard_dataset_pred = standard_dataset.copy(deepcopy=True)
             standard_dataset_pred.labels = predictions
-            postprocessor = EqOddsPostprocessing(unprivileged_groups=unprivileged_groups, privileged_groups=privileged_groups)
+            # Fit the postprocessor
+            postprocessor = EqOddsPostprocessing(
+                unprivileged_groups=unprivileged_groups,
+                privileged_groups=privileged_groups,
+                seed=self.seed,
+            )
             postprocessor.fit(standard_dataset, standard_dataset_pred)
             return PostprocessingModel(model, postprocessor, self)
         else:

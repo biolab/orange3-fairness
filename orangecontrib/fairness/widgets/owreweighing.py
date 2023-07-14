@@ -8,7 +8,7 @@ from Orange.preprocess import preprocess
 from aif360.datasets import StandardDataset
 from aif360.algorithms.preprocessing import Reweighing as ReweighingAlgorithm
 
-from orangedemo.utils import table_to_standard_dataset
+from orangecontrib.fairness.widgets.utils import table_to_standard_dataset
 
 
 class MzCom:

@@ -5,9 +5,9 @@ import numpy as np
 from Orange.widgets.tests.base import WidgetTest
 from Orange.classification.logistic_regression import LogisticRegressionLearner
 
-from orangedemo.owasfairness import OWAsFairness
-from orangedemo.owreweighing import OWReweighing
-from orangedemo.tests.utils import as_fairness_setup
+from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
+from orangecontrib.fairness.widgets.owreweighing import OWReweighing
+from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup
 
 
 class TestOWReweighing(WidgetTest):

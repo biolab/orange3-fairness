@@ -6,7 +6,7 @@ from Orange.widgets.tests.base import WidgetTest
 from Orange.widgets.tests.utils import simulate
 from Orange.widgets.utils.itemmodels import select_rows
 
-from orangedemo.owasfairness import OWAsFairness
+from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
 
 
 class TestOWAsFairness(WidgetTest):

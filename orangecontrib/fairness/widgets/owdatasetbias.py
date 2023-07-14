@@ -6,7 +6,7 @@ from Orange.data import Table
 
 from aif360.metrics import BinaryLabelDatasetMetric
 
-from orangedemo.utils import table_to_standard_dataset
+from orangecontrib.fairness.widgets.utils import table_to_standard_dataset
 
 
 class OWDatasetBias(OWWidget):

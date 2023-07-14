@@ -3,7 +3,7 @@ from Orange.widgets.tests.utils import simulate
 from Orange.widgets.utils.itemmodels import select_rows
 from Orange.evaluation import scoring
 
-from orangedemo.evaluation import scoring as bias_scoring
+from orangecontrib.fairness.evaluation import scoring as bias_scoring
 
 
 def as_fairness_setup(self):

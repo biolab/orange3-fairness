@@ -4,9 +4,9 @@ import unittest
 from Orange.evaluation import CrossValidation, TestOnTrainingData
 from Orange.widgets.tests.base import WidgetTest
 
-from orangedemo.tests.utils import as_fairness_setup, print_metrics
-from orangedemo.owasfairness import OWAsFairness
-from orangedemo.owadversarialdebiasing import OWAdversarialDebiasing
+from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup, print_metrics
+from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
+from orangecontrib.fairness.widgets.owadversarialdebiasing import OWAdversarialDebiasing
 
 
 class TestOWAdversarialDebiasing(WidgetTest):

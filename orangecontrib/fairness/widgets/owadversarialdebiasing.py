@@ -11,7 +11,7 @@ from Orange.base import Model
 from AnyQt.QtWidgets import QFormLayout, QLabel
 from AnyQt.QtCore import Qt
 
-from orangedemo.modeling.adversarial import AdversarialDebiasingLearner
+from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLearner
 
 
 class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):

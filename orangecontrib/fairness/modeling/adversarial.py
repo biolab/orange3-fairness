@@ -5,7 +5,7 @@ from Orange.preprocess import Normalize
 from aif360.algorithms.inprocessing import AdversarialDebiasing
 import tensorflow.compat.v1 as tf
 
-from orangedemo.utils import (
+from orangecontrib.fairness.widgets.utils import (
     table_to_standard_dataset,
     contains_fairness_attributes,
     MISSING_FAIRNESS_ATTRIBUTES,

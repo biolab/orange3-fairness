@@ -6,7 +6,7 @@ from Orange.data import Table
 from aif360.algorithms.postprocessing import EqOddsPostprocessing
 
 
-from orangedemo.utils import (
+from orangecontrib.fairness.widgets.utils import (
     table_to_standard_dataset,
     contains_fairness_attributes,
     MISSING_FAIRNESS_ATTRIBUTES,

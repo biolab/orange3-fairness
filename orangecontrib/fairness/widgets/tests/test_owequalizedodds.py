@@ -8,10 +8,10 @@ from Orange.widgets.evaluate.owpredictions import OWPredictions
 from Orange.widgets.evaluate.owtestandscore import OWTestAndScore
 from Orange.evaluation import scoring
 
-from orangedemo.evaluation import scoring as bias_scoring
-from orangedemo.owequalizedodds import OWEqualizedOdds
-from orangedemo.owasfairness import OWAsFairness
-from orangedemo.tests.utils import as_fairness_setup, print_metrics
+from orangecontrib.fairness.evaluation import scoring as bias_scoring
+from orangecontrib.fairness.widgets.owequalizedodds import OWEqualizedOdds
+from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
+from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup, print_metrics
 
 
 class TestOWEqualizedOdds(WidgetTest):

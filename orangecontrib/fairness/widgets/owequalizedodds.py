@@ -8,7 +8,7 @@ from Orange.widgets import gui
 from AnyQt.QtWidgets import QFormLayout, QLabel
 from AnyQt.QtCore import Qt
 
-from orangedemo.modeling.postprocessing import PostprocessingLearner
+from orangecontrib.fairness.modeling.postprocessing import PostprocessingLearner
 
 
 class OWEqualizedOdds(OWBaseLearner):

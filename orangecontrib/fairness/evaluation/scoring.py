@@ -4,7 +4,7 @@ from Orange.evaluation.scoring import Score
 
 from aif360.metrics import ClassificationMetric
 
-from orangedemo.utils import table_to_standard_dataset, contains_fairness_attributes
+from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, contains_fairness_attributes
 
 
 __all__ = [

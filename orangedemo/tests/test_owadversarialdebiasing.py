@@ -1,15 +1,12 @@
 import os
 import unittest
 
-from Orange.data.table import Table
-from Orange.evaluation import CrossValidation, TestOnTrainingData, scoring
+from Orange.evaluation import CrossValidation, TestOnTrainingData
 from Orange.widgets.tests.base import WidgetTest
-from Orange.widgets.tests.utils import simulate
-from Orange.widgets.utils.itemmodels import select_rows
 
+from orangedemo.tests.utils import as_fairness_setup, print_metrics
 from orangedemo.owasfairness import OWAsFairness
 from orangedemo.owadversarialdebiasing import OWAdversarialDebiasing
-from orangedemo.evaluation import scoring as bias_scoring
 
 
 class TestOWAdversarialDebiasing(WidgetTest):
@@ -17,33 +14,6 @@ class TestOWAdversarialDebiasing(WidgetTest):
         self.test_data_path = os.path.join(os.path.dirname(__file__), "datasets")
         self.widget = self.create_widget(OWAdversarialDebiasing)
         self.as_fairness = self.create_widget(OWAsFairness)
-
-    def as_fairness_setup(self):
-        test_data = Table(f"{self.test_data_path}/adult.tab")
-        self.send_signal(
-            self.as_fairness.Inputs.data,
-            test_data,
-        )
-        simulate.combobox_activate_item(
-            self.as_fairness.controls.favorable_class_value, ">50K"
-        )
-        simulate.combobox_activate_item(
-            self.as_fairness.controls.protected_attribute, "sex"
-        )
-        select_rows(self.as_fairness.controls.privileged_PA_values, [1])
-        output_data = self.get_output(self.as_fairness.Outputs.data)
-        return output_data
-
-    def print_metrics(self, results):
-        print(f"ROC AUC: {scoring.AUC(results)}")
-        print(f"CA: {scoring.CA(results)}")
-        print(f"F1: {scoring.F1(results)}")
-        print(f"Precision: {scoring.Precision(results)}")
-        print(f"Recall: {scoring.Recall(results)}")
-        print(f"SPD: {bias_scoring.StatisticalParityDifference(results)}")
-        print(f"EOD: {bias_scoring.EqualOpportunityDifference(results)}")
-        print(f"AOD: {bias_scoring.AverageOddsDifference(results)}")
-        print(f"DI: {bias_scoring.DisparateImpact(results)}")
 
     def test_no_data(self):
         """Check that the widget doesn't crash on empty data"""
@@ -70,7 +40,7 @@ class TestOWAdversarialDebiasing(WidgetTest):
         self.widget.number_of_epochs = 10
         self.widget.debias = False
 
-        test_data = self.as_fairness_setup()
+        test_data = as_fairness_setup(self)
         self.send_signal(
             self.widget.Inputs.data,
             test_data,
@@ -83,14 +53,14 @@ class TestOWAdversarialDebiasing(WidgetTest):
 
         self.assertIsNotNone(results)
         print("Cross validation results:")
-        self.print_metrics(results)
+        print_metrics(results)
 
     def test_train_test_split(self):
         """Check if the widget works with a normal train-test split"""
         self.widget.number_of_epochs = 10
         self.widget.debias = False
 
-        test_data = self.as_fairness_setup()
+        test_data = as_fairness_setup(self)
         self.send_signal(
             self.widget.Inputs.data,
             test_data,
@@ -103,7 +73,7 @@ class TestOWAdversarialDebiasing(WidgetTest):
 
         self.assertIsNotNone(results)
         print("Train test split results:")
-        self.print_metrics(results)
+        print_metrics(results)
 
 
 if __name__ == "__main__":

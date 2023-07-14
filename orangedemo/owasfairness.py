@@ -179,10 +179,10 @@ class OWAsFairness(OWWidget):
             attribute.attributes.pop("privileged_PA_values", None)
 
         # Clear the attributes of the data domain
-        domain[domain.class_var].attributes.pop("favorable_class_value", None)
+        domain.class_var.attributes.pop("favorable_class_value", None)
 
         # Add the variables as attributes to the data
-        domain[domain.class_var].attributes["favorable_class_value"] = self.favorable_class_value
+        domain.class_var.attributes["favorable_class_value"] = self.favorable_class_value
         domain[self.protected_attribute.name].attributes["privileged_PA_values"] = self.privileged_PA_values
 
         # Create a new table with the new domain

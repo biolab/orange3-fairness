@@ -8,7 +8,7 @@ from Orange.preprocess import preprocess
 from aif360.datasets import StandardDataset
 from aif360.algorithms.preprocessing import Reweighing as ReweighingAlgorithm
 
-from orangecontrib.fairness.widgets.utils import table_to_standard_dataset
+from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, contains_fairness_attributes, check_fairness_data
 
 
 class MzCom:
@@ -97,6 +97,7 @@ class OWReweighing(OWWidget):
 
     # Define what should happen when the input data is received
     @Inputs.data
+    @check_fairness_data
     def set_data(self, data: Optional[Table]) -> None:
         if not data:
             return

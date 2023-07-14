@@ -70,9 +70,12 @@ class TestOWAsFairness(WidgetTest):
         output_data = self.get_output(self.widget.Outputs.data)
 
         self.assertTrue(output_data is not None)
-        self.assertTrue("favorable_class_value" in output_data.attributes)
-        self.assertTrue("protected_attribute" in output_data.attributes)
-        self.assertTrue("privileged_PA_values" in output_data.attributes)
+        self.assertTrue("favorable_class_value" in output_data.domain.class_var.attributes)
+        contains_PA_values = False
+        for attr in output_data.domain.attributes:
+            if "privileged_PA_values" in attr.attributes:
+                        contains_PA_values = True
+        self.assertTrue(contains_PA_values)
 
 
 if __name__ == "__main__":

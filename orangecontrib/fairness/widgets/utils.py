@@ -1,5 +1,12 @@
+from functools import wraps
 from aif360.datasets import StandardDataset
+
 from Orange.data import Domain
+from Orange.widgets.utils.messages import UnboundMsg
+from Orange.data import Table, Domain
+
+
+
 
 
 MISSING_FAIRNESS_ATTRIBUTES: str = (
@@ -7,12 +14,19 @@ MISSING_FAIRNESS_ATTRIBUTES: str = (
     'Use the "As Fairness Data" widget to add them. '
 )
 
+MISSING_ROWS: str = (
+    'Rows with missing values detected. They will be omitted.'
+)
+
 
 def contains_fairness_attributes(domain: Domain) -> bool:
-    return (
-        # TODO: Check for other fairness attributes ?
-        "favorable_class_value" in domain.class_var.attributes
-    )
+    if "favorable_class_value" not in domain.class_var.attributes:
+        return False
+    for var in domain:
+        if "privileged_PA_values" in var.attributes:
+            return True
+    return False
+
 
 
 def is_standard_dataset(data) -> bool:
@@ -26,10 +40,15 @@ def table_to_standard_dataset(data) -> None:
     # This dataframe consists of all the data, the categorical variables are ordinal encoded
     df = ydf.merge(xdf, left_index=True, right_index=True)
 
-    # TODO: Change this so it reads these values from the domain
-    favorable_class_value = data.attributes["favorable_class_value"]
-    protected_attribute = data.attributes["protected_attribute"]
-    privileged_PA_values = data.attributes["privileged_PA_values"]
+    # Read the fairness attributes from the domain of the data
+    favorable_class_value = data.domain.class_var.attributes["favorable_class_value"]
+    protected_attribute = ""
+    privileged_PA_values = ""
+    for attribute in data.domain.attributes:
+        if "privileged_PA_values" in attribute.attributes:
+            protected_attribute = attribute.name
+            privileged_PA_values = attribute.attributes["privileged_PA_values"]
+            break
 
     # Convert the favorable_class_value and privileged_PA_values from their string representation to their integer representation
     # We need to do this because when we convert the Orange table to a pandas dataframe all categorical variables are ordinal encoded
@@ -73,3 +92,37 @@ def table_to_standard_dataset(data) -> None:
     unprivileged_groups = [{protected_attribute: ordinal_value} for ordinal_value in unprivileged_PA_values_ordinal]
 
     return standard_dataset, privileged_groups, unprivileged_groups
+
+
+def check_fairness_data(f):
+    """Check for fairness data."""
+    @wraps(f)
+    def wrapper(widget, data: Table, *args, **kwargs):
+        widget.Error.add_message(
+            'missing_fairness_data', UnboundMsg(MISSING_FAIRNESS_ATTRIBUTES)
+        )
+        widget.Error.missing_fairness_data.clear()
+
+        if data is not None and isinstance(data, Table):
+            if not contains_fairness_attributes(data.domain):
+                widget.Error.missing_fairness_data()
+                data = None
+
+        return f(widget, data, *args, **kwargs)
+
+    return wrapper
+
+def check_for_missing_rows(f):
+    """Check for missing rows."""
+    @wraps(f)
+    def wrapper(widget, data: Table, *args, **kwargs):
+        widget.Warning.add_message('missing_values_detected', UnboundMsg(MISSING_ROWS))
+        widget.Warning.missing_values_detected.clear()
+
+        if data is not None and isinstance(data, Table):
+            if data.has_missing():
+                widget.Warning.missing_values_detected()
+
+        return f(widget, data, *args, **kwargs)
+
+    return wrapper

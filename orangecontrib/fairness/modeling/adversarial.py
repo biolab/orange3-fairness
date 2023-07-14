@@ -84,11 +84,7 @@ class AdversarialDebiasingLearner(Learner):
     # Function responsible for fitting the learner to the data and creating a model
     # TODO: Should I use the X,Y,W format instead of the table format ?
     def fit(self, data: Table) -> AdversarialDebiasingModel:
-        if not contains_fairness_attributes(data.domain):
-            raise ValueError(MISSING_FAIRNESS_ATTRIBUTES)
         standardDataset, privileged_groups, unprivileged_groups = table_to_standard_dataset(data)
-
-
         # Create a new session and reset the default graph
         # Eager execution mea
         tf.disable_eager_execution()

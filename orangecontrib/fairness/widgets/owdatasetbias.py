@@ -6,7 +6,7 @@ from Orange.data import Table
 
 from aif360.metrics import BinaryLabelDatasetMetric
 
-from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, contains_fairness_attributes
+from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, check_fairness_data
 
 
 class OWDatasetBias(OWWidget):
@@ -29,19 +29,13 @@ class OWDatasetBias(OWWidget):
         self.statistical_parity_difference_label = gui.label(box, self, "")
 
     @Inputs.data
+    @check_fairness_data
     def set_data(self, data: Optional[Table]) -> None:
         if (
             not data
         ):
             self.disparate_impact_label.setText("No data detected.")
             self.statistical_parity_difference_label.setText("")
-            return
-        
-        elif (
-            not contains_fairness_attributes(data.domain)
-        ):
-            self.disparate_impact_label.setText("The dataset is not suitable for bias computation.")
-            self.statistical_parity_difference_label.setText("Pass the dataset through the 'As Fairness' widget first")
             return
 
         # Convert Orange data to aif360 StandardDataset

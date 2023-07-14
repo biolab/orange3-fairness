@@ -31,11 +31,7 @@ class TestOWDatasetBias(WidgetTest):
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertEqual(
             self.widget.disparate_impact_label.text(),
-            "The dataset is not suitable for bias computation.",
-        )
-        self.assertEqual(
-            self.widget.statistical_parity_difference_label.text(),
-            "Pass the dataset through the 'As Fairness' widget first",
+            "No data detected.",
         )
 
     def test_input_as_fairness_data(self):

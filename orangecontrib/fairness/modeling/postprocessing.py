@@ -68,9 +68,7 @@ class PostprocessingLearner(Learner):
 
     def fit_storage(self, data):
         if isinstance(data, Table):
-            if contains_fairness_attributes(data.domain):
-                self.fit(data)
-            raise ValueError(MISSING_FAIRNESS_ATTRIBUTES)
+            self.fit(data)
         else:
             raise TypeError("Data is not of type Table")
 

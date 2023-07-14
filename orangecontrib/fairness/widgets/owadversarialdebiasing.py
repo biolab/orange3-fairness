@@ -12,6 +12,7 @@ from AnyQt.QtWidgets import QFormLayout, QLabel
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLearner
+from orangecontrib.fairness.widgets.utils import check_fairness_data
 
 
 class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
@@ -200,6 +201,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         return parameters
 
     @Inputs.data
+    @check_fairness_data
     def set_data(self, data):
         self.data = data
         self.update_model()

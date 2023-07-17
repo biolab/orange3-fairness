@@ -5,7 +5,7 @@ from Orange.widgets.utils.owlearnerwidget import OWBaseLearner
 from Orange.widgets.widget import Input
 from Orange.widgets import gui
 
-from AnyQt.QtWidgets import QFormLayout, QLabel
+from AnyQt.QtWidgets import QFormLayout
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.postprocessing import PostprocessingLearner

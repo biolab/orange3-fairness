@@ -1,6 +1,5 @@
 import unittest
 import os
-import numpy as np
 
 from Orange.widgets.tests.base import WidgetTest
 from Orange.classification.logistic_regression import LogisticRegressionLearner
@@ -11,7 +10,7 @@ from Orange.evaluation import scoring
 from orangecontrib.fairness.evaluation import scoring as bias_scoring
 from orangecontrib.fairness.widgets.owequalizedodds import OWEqualizedOdds
 from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
-from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup, print_metrics
+from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup
 
 
 class TestOWEqualizedOdds(WidgetTest):

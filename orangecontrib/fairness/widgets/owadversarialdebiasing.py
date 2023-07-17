@@ -4,7 +4,6 @@ from Orange.widgets import gui
 from Orange.widgets.settings import Setting
 from Orange.widgets.utils.owlearnerwidget import OWBaseLearner
 from Orange.data import Table
-from Orange.widgets.utils.widgetpreview import WidgetPreview
 from Orange.widgets.utils.concurrent import TaskState, ConcurrentWidgetMixin
 from Orange.base import Model
 
@@ -243,5 +242,6 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
 
 if __name__ == "__main__":
+    from Orange.widgets.utils.widgetpreview import WidgetPreview
     table = Table("http://datasets.biolab.si/core/melanoma.tab")
     WidgetPreview(OWAdversarialDebiasing).run(input_data=table)

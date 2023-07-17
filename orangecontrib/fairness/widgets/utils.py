@@ -53,7 +53,7 @@ def table_to_standard_dataset(data) -> None:
     class_values = data.domain.class_var.values
     protected_attribute_values = data.domain[protected_attribute].values
 
-    # Get the index of the favorable_class_value and privileged_PA_values in the list of values, this is the ordinal representation
+    # Get the ordinal representation of the favorable_class_value and privileged_PA_values, this is their index in the list of values
     favorable_class_value_ordinal = class_values.index(favorable_class_value)
     privileged_PA_values_ordinal = [
         protected_attribute_values.index(value) for value in privileged_PA_values
@@ -85,6 +85,12 @@ def table_to_standard_dataset(data) -> None:
         ],  # privileged_classes: the values of the protected attribute that are considered privileged (in this case they are ordinal encoded)
         # categorical_features = discrete_variables,
     )
+
+    # Temporary adversarial debiasing bug fix (For some reason even if the favorable_class_value_ordinal is set correctly, the favorable and unfavorable labels are switched in some cases)
+    if standard_dataset.favorable_label != favorable_class_value_ordinal:
+        old_favorable_label = standard_dataset.favorable_label
+        standard_dataset.favorable_label = standard_dataset.unfavorable_label
+        standard_dataset.unfavorable_label = old_favorable_label
 
     if "weights" in mdf:
         standard_dataset.instance_weights = mdf["weights"].to_numpy()

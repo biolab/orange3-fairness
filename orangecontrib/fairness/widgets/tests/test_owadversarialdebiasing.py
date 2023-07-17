@@ -75,6 +75,37 @@ class TestOWAdversarialDebiasing(WidgetTest):
         print("Train test split results:")
         print_metrics(results)
 
+    # def test_compatibility_with_predictions(self):
+    #     """Check that the widget works with the predictions widget"""
+    #     self.predictions = self.create_widget(OWPredictions)
+        
+    #     self.widget.number_of_epochs = 10
+    #     self.widget.debias = False
+
+    #     data_sample = Table("workflows/testing_data/adult_sample.pkl")
+    #     data_remaining = Table("workflows/testing_data/adult_remaining.pkl")
+    #     self.send_signal(self.widget.Inputs.data, data_sample)
+
+    #     self.wait_until_finished(self.widget, timeout=2000000)
+
+    #     learner = self.get_output(self.widget.Outputs.learner)
+    #     model = self.get_output(self.widget.Outputs.model)
+
+    #     self.send_signal(
+    #         self.predictions.Inputs.data, data_remaining, widget=self.predictions
+    #     )
+    #     self.send_signal(
+    #         self.predictions.Inputs.predictors, model, widget=self.predictions
+    #     )
+    #     predictions = self.get_output(
+    #         self.predictions.Outputs.predictions, widget=self.predictions
+    #     )
+    #     results = self.get_output(
+    #         self.predictions.Outputs.evaluation_results, widget=self.predictions
+    #     )
+
+    #     print_metrics(results)
+
 
 if __name__ == "__main__":
     unittest.main()

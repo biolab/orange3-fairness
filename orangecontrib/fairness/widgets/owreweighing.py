@@ -5,10 +5,9 @@ from Orange.widgets.widget import Input, Output, OWWidget
 from Orange.data import Table, Domain, ContinuousVariable
 from Orange.preprocess import preprocess
 
-from aif360.datasets import StandardDataset
 from aif360.algorithms.preprocessing import Reweighing as ReweighingAlgorithm
 
-from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, check_fairness_data
+from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, check_fairness_data, is_standard_dataset
 
 
 class MzCom:
@@ -18,7 +17,7 @@ class MzCom:
         self.model = model
 
     def __call__(self, data):
-        if not isinstance(data, StandardDataset):
+        if not is_standard_dataset(data):
             data, _, _ = table_to_standard_dataset(data)
         # Check if the model is a ReweighingAlgorithm, if not raise an error
         if not isinstance(self.model, ReweighingAlgorithm):

@@ -202,6 +202,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     @Inputs.data
     @check_fairness_data
     def set_data(self, data):
+        self.cancel()
         self.data = data
         self.update_model()
 
@@ -214,6 +215,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     # it is responsible for fitting the learner and sending the created model to the output
     # There is also a update_learner method which is called in the apply method of the superclass (along with update_model)
     def update_model(self):
+        self.cancel()
         # This method will run the run_task method in a separate thread and pass the learner and data as arguments
         if self.data is not None:
             self.start(self.run_task, self.create_learner(), self.data)

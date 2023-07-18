@@ -1,8 +1,11 @@
 import os
 import unittest
 
-from Orange.evaluation import CrossValidation, TestOnTrainingData
+from Orange.evaluation import CrossValidation, TestOnTrainingData, TestOnTestData
 from Orange.widgets.tests.base import WidgetTest
+from Orange.data import Table
+from Orange.widgets.evaluate.owpredictions import OWPredictions
+from Orange.widgets.evaluate.owtestandscore import OWTestAndScore
 
 from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup, print_metrics
 from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
@@ -41,10 +44,6 @@ class TestOWAdversarialDebiasing(WidgetTest):
         self.widget.debias = False
 
         test_data = as_fairness_setup(self)
-        self.send_signal(
-            self.widget.Inputs.data,
-            test_data,
-        )
 
         learner = self.widget.create_learner()
 
@@ -61,19 +60,42 @@ class TestOWAdversarialDebiasing(WidgetTest):
         self.widget.debias = False
 
         test_data = as_fairness_setup(self)
-        self.send_signal(
-            self.widget.Inputs.data,
-            test_data,
-        )
 
         learner = self.widget.create_learner()
 
-        ttt = TestOnTrainingData(store_data=True)
-        results = ttt(test_data, [learner])
+        test_on_training = TestOnTrainingData(store_data=True)
+        results = test_on_training(test_data, [learner])
 
         self.assertIsNotNone(results)
         print("Train test split results:")
         print_metrics(results)
+
+    # def test_compatibility_with_test_and_score(self):
+    #     """Check that the widget works with the predictions widget"""
+    #     self.test_and_score = self.create_widget(OWTestAndScore)
+        
+    #     self.widget.number_of_epochs = 10
+    #     self.widget.debias = False
+
+    #     data_sample = Table("workflows/testing_data/adult_sample.pkl")
+    #     data_remaining = Table("workflows/testing_data/adult_remaining.pkl")
+    #     self.send_signal(self.widget.Inputs.data, data_sample)
+
+    #     self.wait_until_finished(self.widget, timeout=2000000)
+
+    #     learner = self.get_output(self.widget.Outputs.learner)
+
+    #     self.send_signal(
+    #         self.test_and_score.Inputs.train_data, data_remaining, widget=self.test_and_score
+    #     )
+    #     self.send_signal(
+    #         self.test_and_score.Inputs.learner, learner, widget=self.test_and_score
+    #     )
+    #     results = self.get_output(
+    #         self.test_and_score.Outputs.evaluations_results, widget=self.test_and_score
+    #     )
+
+    #     print_metrics(results)
 
     # def test_compatibility_with_predictions(self):
     #     """Check that the widget works with the predictions widget"""
@@ -88,7 +110,6 @@ class TestOWAdversarialDebiasing(WidgetTest):
 
     #     self.wait_until_finished(self.widget, timeout=2000000)
 
-    #     learner = self.get_output(self.widget.Outputs.learner)
     #     model = self.get_output(self.widget.Outputs.model)
 
     #     self.send_signal(
@@ -97,13 +118,27 @@ class TestOWAdversarialDebiasing(WidgetTest):
     #     self.send_signal(
     #         self.predictions.Inputs.predictors, model, widget=self.predictions
     #     )
-    #     predictions = self.get_output(
-    #         self.predictions.Outputs.predictions, widget=self.predictions
-    #     )
     #     results = self.get_output(
     #         self.predictions.Outputs.evaluation_results, widget=self.predictions
     #     )
 
+    #     print_metrics(results)
+
+    # def test_try_to_replicate_error(self):
+    #     """Check if the widget works with a normal train-test split"""
+    #     self.widget.number_of_epochs = 10
+    #     self.widget.debias = False
+
+    #     data_sample = Table("workflows/testing_data/adult_sample.pkl")
+    #     data_remaining = Table("workflows/testing_data/adult_remaining.pkl")
+
+    #     learner = self.widget.create_learner()
+
+    #     test_on_test = TestOnTestData(store_data=True)
+    #     results = test_on_test(data=data_sample, test_data=data_remaining, learners=[learner])
+
+    #     self.assertIsNotNone(results)
+    #     print("Train test split results:")
     #     print_metrics(results)
 
 

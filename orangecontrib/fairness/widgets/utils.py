@@ -33,7 +33,7 @@ def table_to_standard_dataset(data) -> None:
     # Convert Orange data to aif360 dataset, it returns a touple xdf, ydf, mdf
     xdf, ydf, mdf = data.to_pandas_dfs()
     # Merge xdf and ydf TODO: Check if I need to merge mdf
-    # This dataframe consists of all the data, the categorical variables are ordinal encoded
+    # This dataframe consists of all the data, the categorical variables values are represented with the index of the value in domain[attribute].values
     df = ydf.merge(xdf, left_index=True, right_index=True)
 
     # Read the fairness attributes from the domain of the data
@@ -46,28 +46,33 @@ def table_to_standard_dataset(data) -> None:
             privileged_PA_values = attribute.attributes["privileged_PA_values"]
             break
 
-    # Convert the favorable_class_value and privileged_PA_values from their string representation to their integer representation
-    # We need to do this because when we convert the Orange table to a pandas dataframe all categorical variables are ordinal encoded
+    # Convert the favorable_class_value and privileged_PA_values from their string representation to their index representation
+    # We need to do this because when we convert the Orange table to a pandas dataframe all categorical variables are encoded
 
     # Get the values for the attributes
     class_values = data.domain.class_var.values
     protected_attribute_values = data.domain[protected_attribute].values
 
-    # Get the ordinal representation of the favorable_class_value and privileged_PA_values, this is their index in the list of values
-    favorable_class_value_ordinal = class_values.index(favorable_class_value)
-    privileged_PA_values_ordinal = [
+    # Get the index representation of the favorable_class_value and privileged_PA_values, this is their index in the list of values
+    favorable_class_value_indexes = class_values.index(favorable_class_value)
+    privileged_PA_values_indexes = [
         protected_attribute_values.index(value) for value in privileged_PA_values
     ]
-    unprivileged_PA_values_ordinal = [
+    unprivileged_PA_values_indexes = [
         i
         for i in range(len(protected_attribute_values))
-        if i not in privileged_PA_values_ordinal
+        if i not in privileged_PA_values_indexes
     ]
 
-    # If the data is from a "predict" function call and does not contain the class variable we need to add it and assign it to one of the values
-    # This is because the aif360 StandardDataset requires the class variable to be present even if we will not use it so we can assign it to any value
+    # If the data is from a "predict" function call and does not contain the class variable we need to add it and fill it with dummy values
+    # The dummy values need to contain all the possible values of the class variable (in its index representation)
+    # This is because the aif360 StandardDataset requires the class variable to be present in the dataframe with all the possible values
     if data.domain.class_var.name not in df.columns:
-        df[data.domain.class_var.name] = 0
+        # Create an array with index class variable values with the same length as the dataframe
+        num_unique_values = len(data.domain.class_var.values)
+        repeated_values = list(range(num_unique_values)) * (len(df) // num_unique_values + 1)
+        df[data.domain.class_var.name] = repeated_values[:len(df)]
+
 
     # Create the StandardDataset, this is the dataset that aif360 uses
 
@@ -75,35 +80,30 @@ def table_to_standard_dataset(data) -> None:
         df=df,  # df: a pandas dataframe containing all the data
         label_name=data.domain.class_var.name,  # label_name: the name of the class variable
         favorable_classes=[
-            favorable_class_value_ordinal
+            favorable_class_value_indexes
         ],  # favorable_classes: the values of the class variable that are considered favorable
         protected_attribute_names=[
             protected_attribute
         ],  # protected_attribute_names: the name of the protected attribute
         privileged_classes=[
-            privileged_PA_values_ordinal
-        ],  # privileged_classes: the values of the protected attribute that are considered privileged (in this case they are ordinal encoded)
+            privileged_PA_values_indexes
+        ],  # privileged_classes: the values of the protected attribute that are considered privileged (in this case they are index encoded)
         # categorical_features = discrete_variables,
     )
 
-    # Temporary adversarial debiasing bug fix (For some reason even if the favorable_class_value_ordinal is set correctly, the favorable and unfavorable labels are switched in some cases)
-    if standard_dataset.favorable_label != favorable_class_value_ordinal:
-        old_favorable_label = standard_dataset.favorable_label
-        standard_dataset.favorable_label = standard_dataset.unfavorable_label
-        standard_dataset.unfavorable_label = old_favorable_label
 
     if "weights" in mdf:
         standard_dataset.instance_weights = mdf["weights"].to_numpy()
 
     # Create the privileged and unprivileged groups
-    # The format is a list of dictionaries, each dictionary contains the name of the protected attribute and the ordinal value of the privileged/unprivileged group
+    # The format is a list of dictionaries, each dictionary contains the name of the protected attribute and the index value of the privileged/unprivileged group
     privileged_groups = [
-        {protected_attribute: ordinal_value}
-        for ordinal_value in privileged_PA_values_ordinal
+        {protected_attribute: index_value}
+        for index_value in privileged_PA_values_indexes
     ]
     unprivileged_groups = [
-        {protected_attribute: ordinal_value}
-        for ordinal_value in unprivileged_PA_values_ordinal
+        {protected_attribute: index_value}
+        for index_value in unprivileged_PA_values_indexes
     ]
 
     return standard_dataset, privileged_groups, unprivileged_groups

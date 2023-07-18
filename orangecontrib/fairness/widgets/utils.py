@@ -151,6 +151,15 @@ def table_to_standard_dataset(data) -> None:
     if data.domain.class_var.name not in df.columns:
         _add_dummy_class_column(data, df)
 
+
+    # Map the protected_attribute privileged values to 1 and the unprivileged values to 0
+    # This is so AdversarialDebiasing can work when the protected attribute has more than two unique values
+    # It does not affect the performance of any other algorithm
+    df[protected_attribute] = df[protected_attribute].map(
+        lambda x: 1 if x in privileged_PA_values_indexes else 0
+    )
+
+
     # Create the StandardDataset, this is the dataset that aif360 uses
     standard_dataset = StandardDataset(
         df=df,  # df: a pandas dataframe containing all the data
@@ -162,7 +171,7 @@ def table_to_standard_dataset(data) -> None:
             protected_attribute
         ],  # protected_attribute_names: the name of the protected attribute
         privileged_classes=[
-            privileged_PA_values_indexes
+            [1]
         ],  # privileged_classes: the values of the protected attribute that are considered privileged (in this case they are index encoded)
         # categorical_features = discrete_variables,
     )
@@ -171,14 +180,14 @@ def table_to_standard_dataset(data) -> None:
         standard_dataset.instance_weights = mdf["weights"].to_numpy()
 
     # Create the privileged and unprivileged groups
-    # The format is a list of dictionaries, each dictionary contains the name of the protected attribute and the index value of the privileged/unprivileged group
+    # The format was a list of dictionaries, each dictionary contains the name of the protected attribute and the index value of the privileged/unprivileged group
+    # Because AdversaryDebiasing can only handle one protected attribute, we converted all privileged values to 1 and unprivileged to 0 and now only need one dictionary (the result is the same)
     privileged_groups = [
-        {protected_attribute: index_value}
-        for index_value in privileged_PA_values_indexes
+        {protected_attribute: 1}
     ]
     unprivileged_groups = [
-        {protected_attribute: index_value}
-        for index_value in unprivileged_PA_values_indexes
+        {protected_attribute: 0}
     ]
+
 
     return standard_dataset, privileged_groups, unprivileged_groups

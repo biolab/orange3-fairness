@@ -11,6 +11,7 @@ setup(
         },
     install_requires=[
         "tensorflow>=2.12.0",
-        "aif360>=0.5.0",
+        # "aif360>=0.5.0",
+        "aif360==0.5.0",
     ]
 )

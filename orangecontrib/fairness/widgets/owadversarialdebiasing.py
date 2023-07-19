@@ -14,6 +14,27 @@ from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLear
 from orangecontrib.fairness.widgets.utils import check_fairness_data
 
 
+class InterruptException(Exception):
+    pass
+
+class AdversarialDebiasingRunner:
+    @staticmethod
+    def run(
+        learner: AdversarialDebiasingLearner, data: Table, state: TaskState
+    ) -> Model:
+        if data is None:
+            return None
+        
+        def callback(i: float) -> bool:
+            state.set_progress_value(i)
+            if state.is_interruption_requested():
+                raise InterruptException
+
+        model = learner(data)
+        return model
+
+
+
 class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     name = "Adversarial Debiasing"
     description = "Adversarial Debiasing classification algorithm with or without fairness constraints."
@@ -176,7 +197,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
             kwargs["seed"] = 42
         if self.debias:
             kwargs["adversary_loss_weight"] = self.selected_lambda
-        return self.LEARNER(**kwargs)
+        return self.LEARNER(**kwargs, preprocessors=self.preprocessors)
 
     def handleNewSignals(self):
         self.apply()  # This calls the update_learner and update_model methods
@@ -203,13 +224,11 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     @check_fairness_data
     def set_data(self, data):
         self.cancel()
-        self.data = data
-        self.update_model()
+        super().set_data(data)
 
-    # @Inputs.preprocessor
-    # def set_preprocessor(self, preprocessor):
-    #     self.preprocessor = preprocessor
-    #     self.update_model()
+    @Inputs.preprocessor
+    def set_preprocessor(self, preprocessor):
+        super().set_preprocessor(preprocessor)
 
     # This method is called when the input data is changed
     # it is responsible for fitting the learner and sending the created model to the output
@@ -218,15 +237,10 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         self.cancel()
         # This method will run the run_task method in a separate thread and pass the learner and data as arguments
         if self.data is not None:
-            self.start(self.run_task, self.create_learner(), self.data)
+            self.start(AdversarialDebiasingRunner.run, self.create_learner(), self.data)
         else:
             self.Outputs.model.send(None)
 
-    def run_task(
-        self, learner: AdversarialDebiasingLearner, data: Table, state: TaskState
-    ) -> Model:
-        model = learner(data)
-        return model
 
     def on_partial_result(self, _):
         pass

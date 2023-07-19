@@ -17,6 +17,7 @@ from orangecontrib.fairness.widgets.utils import check_fairness_data
 class InterruptException(Exception):
     pass
 
+
 class AdversarialDebiasingRunner:
     @staticmethod
     def run(
@@ -24,15 +25,16 @@ class AdversarialDebiasingRunner:
     ) -> Model:
         if data is None:
             return None
-        
-        def callback(i: float) -> bool:
+
+        def callback(i: float, msg: str = None) -> bool:
             state.set_progress_value(i)
+            if msg:
+                state.set_status(msg)
             if state.is_interruption_requested():
                 raise InterruptException
 
-        model = learner(data)
+        model = learner(data, progress_callback=callback)
         return model
-
 
 
 class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
@@ -226,8 +228,22 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         self.cancel()
         super().set_data(data)
 
+    def custom_preprocessor_message(self, preprocessor):
+        self.Information.add_message(
+            "custom_preprocessor_detected",
+            "Ignoring default preprocessing. \n"
+            "Default preprocessing (scailing), has been replaced with user-specified "
+            "preprocessors. Problems may occur if these are inadequate"
+            "for the given data.",
+        )
+        self.Information.custom_preprocessor_detected.clear()
+        if preprocessor is not None:
+            self.Information.custom_preprocessor_detected()
+
     @Inputs.preprocessor
     def set_preprocessor(self, preprocessor):
+        self.custom_preprocessor_message(preprocessor)
+        self.cancel()
         super().set_preprocessor(preprocessor)
 
     # This method is called when the input data is changed
@@ -240,7 +256,6 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
             self.start(AdversarialDebiasingRunner.run, self.create_learner(), self.data)
         else:
             self.Outputs.model.send(None)
-
 
     def on_partial_result(self, _):
         pass
@@ -259,5 +274,6 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
 if __name__ == "__main__":
     from Orange.widgets.utils.widgetpreview import WidgetPreview
-    table = Table("http://datasets.biolab.si/core/melanoma.tab")
+
+    table = Table("workflows/testing_data/adult_all.pkl")
     WidgetPreview(OWAdversarialDebiasing).run(input_data=table)

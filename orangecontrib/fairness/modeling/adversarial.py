@@ -60,9 +60,11 @@ class AdversarialDebiasingModel(Model):
 class AdversarialDebiasingLearner(Learner):
     __returns__ = AdversarialDebiasingModel
     name = "Adversarial Debiasing"
+    # List of preprocessors, these get applied when the __call__ function is called
     preprocessors = [
         Normalize()
     ]
+    callback = None
 
     def __init__(self, preprocessors=None, **kwargs):
         self.params = vars()
@@ -102,12 +104,13 @@ class AdversarialDebiasingLearner(Learner):
             sess=sess,
             scope_name="adversarial_debiasing"
         )
-        model = model.fit(standardDataset)
+        model = model.fit(standardDataset, callback=self.callback)
         return AdversarialDebiasingModel(model=model, learner=self)
 
     # This is called when using the learner as a function, in the superclass it uses the _fit_model function
     # Which creates a new model by calling the fit function
     def __call__(self, data, progress_callback=None):
+        self.callback = progress_callback
         model = super().__call__(data, progress_callback)
         model.params = self.params
         return model

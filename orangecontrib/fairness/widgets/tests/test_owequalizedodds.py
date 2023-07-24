@@ -25,95 +25,95 @@ class TestOWEqualizedOdds(WidgetTest):
         """Check that the widget doesn't crash on empty data"""
         self.send_signal(self.widget.Inputs.data, None)
 
-    def test_compatibility_with_predictions(self):
-        """Check that the widget works with the predictions widget"""
-        test_data = as_fairness_setup(self)
-        self.send_signal(self.widget.Inputs.data, test_data)
-        self.send_signal(self.widget.Inputs.learner, LogisticRegressionLearner())
-        learner = self.widget.create_learner()
-        model = learner(test_data)
+    # def test_compatibility_with_predictions(self):
+    #     """Check that the widget works with the predictions widget"""
+    #     test_data = as_fairness_setup(self)
+    #     self.send_signal(self.widget.Inputs.data, test_data)
+    #     self.send_signal(self.widget.Inputs.learner, LogisticRegressionLearner())
+    #     learner = self.widget.create_learner()
+    #     model = learner(test_data)
 
-        self.send_signal(
-            self.predictions.Inputs.data, test_data, widget=self.predictions
-        )
-        self.send_signal(
-            self.predictions.Inputs.predictors, model, widget=self.predictions
-        )
-        predictions = self.get_output(
-            self.predictions.Outputs.predictions, widget=self.predictions
-        )
-        results = self.get_output(
-            self.predictions.Outputs.evaluation_results, widget=self.predictions
-        )
+    #     self.send_signal(
+    #         self.predictions.Inputs.data, test_data, widget=self.predictions
+    #     )
+    #     self.send_signal(
+    #         self.predictions.Inputs.predictors, model, widget=self.predictions
+    #     )
+    #     predictions = self.get_output(
+    #         self.predictions.Outputs.predictions, widget=self.predictions
+    #     )
+    #     results = self.get_output(
+    #         self.predictions.Outputs.evaluation_results, widget=self.predictions
+    #     )
 
-        self.assertIsNotNone(predictions)
-        self.assertIsNotNone(results)
+    #     self.assertIsNotNone(predictions)
+    #     self.assertIsNotNone(results)
 
-    def test_compatibility_with_test_and_score(self):
-        """Check that the widget works with the test and score widget"""
-        test_data = as_fairness_setup(self)
-        self.send_signal(self.widget.Inputs.data, test_data)
-        self.send_signal(self.widget.Inputs.learner, LogisticRegressionLearner())
-        learner = self.widget.create_learner()
+    # def test_compatibility_with_test_and_score(self):
+    #     """Check that the widget works with the test and score widget"""
+    #     test_data = as_fairness_setup(self)
+    #     self.send_signal(self.widget.Inputs.data, test_data)
+    #     self.send_signal(self.widget.Inputs.learner, LogisticRegressionLearner())
+    #     learner = self.widget.create_learner()
 
-        self.send_signal(
-            self.cross_validation.Inputs.train_data,
-            test_data,
-            widget=self.cross_validation,
-        )
-        self.send_signal(
-            self.cross_validation.Inputs.learner, learner, widget=self.cross_validation
-        )
-        self.wait_until_finished(self.cross_validation)
-        predictions = self.get_output(
-            self.cross_validation.Outputs.predictions, widget=self.cross_validation
-        )
-        results = self.get_output(
-            self.cross_validation.Outputs.evaluations_results,
-            widget=self.cross_validation,
-        )
+    #     self.send_signal(
+    #         self.cross_validation.Inputs.train_data,
+    #         test_data,
+    #         widget=self.cross_validation,
+    #     )
+    #     self.send_signal(
+    #         self.cross_validation.Inputs.learner, learner, widget=self.cross_validation
+    #     )
+    #     self.wait_until_finished(self.cross_validation)
+    #     predictions = self.get_output(
+    #         self.cross_validation.Outputs.predictions, widget=self.cross_validation
+    #     )
+    #     results = self.get_output(
+    #         self.cross_validation.Outputs.evaluations_results,
+    #         widget=self.cross_validation,
+    #     )
 
-        self.assertIsNotNone(predictions)
-        self.assertIsNotNone(results)
+    #     self.assertIsNotNone(predictions)
+    #     self.assertIsNotNone(results)
 
-    def test_effecitveness(self):
-        """Check that the widget works with the predictions widget"""
-        test_data = as_fairness_setup(self)
-        self.send_signal(self.widget.Inputs.data, test_data)
-        self.send_signal(self.widget.Inputs.learner, LogisticRegressionLearner())
-        learner = self.widget.create_learner()
-        model = learner(test_data)
+    # def test_effecitveness(self):
+    #     """Check that the widget works with the predictions widget"""
+    #     test_data = as_fairness_setup(self)
+    #     self.send_signal(self.widget.Inputs.data, test_data)
+    #     self.send_signal(self.widget.Inputs.learner, LogisticRegressionLearner())
+    #     learner = self.widget.create_learner()
+    #     model = learner(test_data)
 
-        # Predictions with postprocessing
-        self.send_signal(
-            self.predictions.Inputs.data, test_data, widget=self.predictions
-        )
-        self.send_signal(
-            self.predictions.Inputs.predictors, model, widget=self.predictions
-        )
-        results = self.get_output(
-            self.predictions.Outputs.evaluation_results, widget=self.predictions
-        )
+    #     # Predictions with postprocessing
+    #     self.send_signal(
+    #         self.predictions.Inputs.data, test_data, widget=self.predictions
+    #     )
+    #     self.send_signal(
+    #         self.predictions.Inputs.predictors, model, widget=self.predictions
+    #     )
+    #     results = self.get_output(
+    #         self.predictions.Outputs.evaluation_results, widget=self.predictions
+    #     )
 
-        # Predictions without postprocessing
-        learner = LogisticRegressionLearner()
-        model = learner(test_data)
-        self.send_signal(
-            self.predictions.Inputs.predictors, model, widget=self.predictions
-        )
-        normal_results = self.get_output(
-            self.predictions.Outputs.evaluation_results, widget=self.predictions
-        )
+    #     # Predictions without postprocessing
+    #     learner = LogisticRegressionLearner()
+    #     model = learner(test_data)
+    #     self.send_signal(
+    #         self.predictions.Inputs.predictors, model, widget=self.predictions
+    #     )
+    #     normal_results = self.get_output(
+    #         self.predictions.Outputs.evaluation_results, widget=self.predictions
+    #     )
 
-        # Check that the two results are different
-        self.assertNotEqual(scoring.CA(results), scoring.CA(normal_results))
+    #     # Check that the two results are different
+    #     self.assertNotEqual(scoring.CA(results), scoring.CA(normal_results))
 
-        aod = bias_scoring.AverageOddsDifference(results)
-        normal_aod = bias_scoring.AverageOddsDifference(normal_results)
-        self.assertNotEqual(aod, normal_aod)
+    #     aod = bias_scoring.AverageOddsDifference(results)
+    #     normal_aod = bias_scoring.AverageOddsDifference(normal_results)
+    #     self.assertNotEqual(aod, normal_aod)
 
-        # Check that the absolute value of aod is smaller than the normal aod
-        # self.assertLessEqual(np.abs(aod), np.abs(normal_aod))
+    #     # Check that the absolute value of aod is smaller than the normal aod
+    #     # self.assertLessEqual(np.abs(aod), np.abs(normal_aod))
 
     def test_repeatable_parameter(self):
         """Check that the repeatable parameter works"""

@@ -10,6 +10,7 @@ setup(
         "orange.widgets": ("Fairness = orangecontrib.fairness.widgets",),
         },
     install_requires=[
+        "Orange3",
         "tensorflow>=2.12.0",
         # "aif360>=0.5.0",
         "aif360==0.5.0",

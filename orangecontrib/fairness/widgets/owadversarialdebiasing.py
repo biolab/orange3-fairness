@@ -28,8 +28,8 @@ class AdversarialDebiasingRunner:
 
         def callback(i: float, msg: str = None) -> bool:
             state.set_progress_value(i)
-            if msg:
-                state.set_status(msg)
+            # if msg:
+            #     state.set_status(msg)
             if state.is_interruption_requested():
                 raise InterruptException
 

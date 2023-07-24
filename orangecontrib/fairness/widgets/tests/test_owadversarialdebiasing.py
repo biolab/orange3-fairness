@@ -38,6 +38,12 @@ class TestOWAdversarialDebiasing(WidgetTest):
         self.assertEqual(self.widget.debias, False)
         self.assertEqual(self.widget.repeatable, True)
 
+    def test_incorrect_input_data(self):
+        """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
+        test_data = Table(f"{self.test_data_path}/adult.tab")
+        self.send_signal(self.widget.Inputs.data, test_data)
+        self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
+
     def test_cross_validation(self):
         """Check if the widget works with cross validation"""
         self.widget.number_of_epochs = 10
@@ -77,8 +83,8 @@ class TestOWAdversarialDebiasing(WidgetTest):
     #     self.widget.number_of_epochs = 10
     #     self.widget.debias = False
 
-    #     data_sample = Table("workflows/testing_data/adult_sample.pkl")
-    #     data_remaining = Table("workflows/testing_data/adult_remaining.pkl")
+    #     data_sample = Table("orange_workflows/testing_data/adult_sample.pkl")
+    #     data_remaining = Table("orange_workflows/testing_data/adult_remaining.pkl")
     #     self.send_signal(self.widget.Inputs.data, data_sample)
 
     #     self.wait_until_finished(self.widget, timeout=2000000)
@@ -104,8 +110,8 @@ class TestOWAdversarialDebiasing(WidgetTest):
     #     self.widget.number_of_epochs = 10
     #     self.widget.debias = False
 
-    #     data_sample = Table("workflows/testing_data/adult_sample.pkl")
-    #     data_remaining = Table("workflows/testing_data/adult_remaining.pkl")
+    #     data_sample = Table("orange_workflows/testing_data/adult_sample.pkl")
+    #     data_remaining = Table("orange_workflows/testing_data/adult_remaining.pkl")
     #     self.send_signal(self.widget.Inputs.data, data_sample)
 
     #     self.wait_until_finished(self.widget, timeout=2000000)
@@ -129,8 +135,8 @@ class TestOWAdversarialDebiasing(WidgetTest):
     #     self.widget.number_of_epochs = 10
     #     self.widget.debias = False
 
-    #     data_sample = Table("workflows/testing_data/adult_sample.pkl")
-    #     data_remaining = Table("workflows/testing_data/adult_remaining.pkl")
+    #     data_sample = Table("orange_workflows/testing_data/adult_sample.pkl")
+    #     data_remaining = Table("orange_workflows/testing_data/adult_remaining.pkl")
 
     #     learner = self.widget.create_learner()
 

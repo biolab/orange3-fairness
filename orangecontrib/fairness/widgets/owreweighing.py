@@ -85,6 +85,8 @@ class OWReweighing(OWWidget):
     # Define the initial state of the widget (constructor)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.preprocessor = ReweighingTransform()
+        self.Outputs.preprocessor.send(self.preprocessor)
 
         box = gui.vBox(self.mainArea, "Info")
         gui.widgetLabel(
@@ -110,8 +112,7 @@ class OWReweighing(OWWidget):
         if self._data is None:
             return
 
-        preprocessor = ReweighingTransform()
-        preprocessed_data = preprocessor(self._data)
+        preprocessed_data = self.preprocessor(self._data)
 
         self.Outputs.data.send(preprocessed_data)
-        self.Outputs.preprocessor.send(preprocessor)
+        self.Outputs.preprocessor.send(self.preprocessor)

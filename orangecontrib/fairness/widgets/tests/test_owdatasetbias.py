@@ -25,14 +25,11 @@ class TestOWDatasetBias(WidgetTest):
         self.assertEqual(self.widget.disparate_impact_label.text(), "No data detected.")
         self.assertEqual(self.widget.statistical_parity_difference_label.text(), "")
 
-    def test_input_normal_data(self):
-        """Check that the widget doesn't crash on normal data"""
+    def test_incorrect_input_data(self):
+        """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
         test_data = Table(f"{self.test_data_path}/adult.tab")
         self.send_signal(self.widget.Inputs.data, test_data)
-        self.assertEqual(
-            self.widget.disparate_impact_label.text(),
-            "No data detected.",
-        )
+        self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
 
     def test_input_as_fairness_data(self):
         """Check that the widget works with data from the as fairness widget"""

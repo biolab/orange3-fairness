@@ -17,11 +17,7 @@ class MzCom:
         self.model = model
 
     def __call__(self, data):
-        if not is_standard_dataset(data):
-            data, _, _ = table_to_standard_dataset(data)
-        # Check if the model is a ReweighingAlgorithm, if not raise an error
-        if not isinstance(self.model, ReweighingAlgorithm):
-            raise ValueError("The model must be a ReweighingAlgorithm")
+        data, _, _ = table_to_standard_dataset(data)
         # Call the transform method of the model
         data = self.model.transform(data)
         # Return the weights
@@ -31,7 +27,7 @@ class MzCom:
     InheritEq = True
 
 
-class ReweighingModel(preprocess.Preprocess):
+class ReweighingModel():
     # This class doesn't need an __init__ method because it doesn't need any arguments when it is created
     # The __call__ method creates an instance of the ReweighingAlgorithm, fits it to the data and returns it
     def __call__(self, data):

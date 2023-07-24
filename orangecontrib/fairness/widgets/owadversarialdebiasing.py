@@ -275,5 +275,5 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 if __name__ == "__main__":
     from Orange.widgets.utils.widgetpreview import WidgetPreview
 
-    table = Table("workflows/testing_data/adult_all.pkl")
+    table = Table("orange_workflows/testing_data/adult_all.pkl")
     WidgetPreview(OWAdversarialDebiasing).run(input_data=table)

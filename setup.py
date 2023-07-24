@@ -3,7 +3,9 @@ from setuptools import setup, find_packages
 setup(
     name="Fairness",
     packages=find_packages(),
-    package_data={"orangecontrib.fairness.widgets": ["icons/*"]},
+    package_data={
+        "orangecontrib.fairness.widgets": ["icons/*"],
+        },
     classifiers=["Example :: Invalid"],
     entry_points={
         "orange3.addon": ("Orange3-Fairness = orangecontrib.fairness",),

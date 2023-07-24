@@ -12,6 +12,7 @@ from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
 class TestOWAsFairness(WidgetTest):
     def setUp(self) -> None:
         self.widget = self.create_widget(OWAsFairness)
+        self.test_data_path = "https://datasets.biolab.si/core/adult.tab"
 
     def test_no_data(self):
         """Check that the widget doesn't crash on empty data"""
@@ -19,8 +20,7 @@ class TestOWAsFairness(WidgetTest):
 
     def test_input_data(self):
         """Check that the comboboxes are populated with the values"""
-        test_data_path = os.path.join(os.path.dirname(__file__), "datasets")
-        test_data = Table(f"{test_data_path}/adult.tab")
+        test_data = Table(self.test_data_path)
         self.send_signal(
             self.widget.Inputs.data,
             test_data,
@@ -34,8 +34,7 @@ class TestOWAsFairness(WidgetTest):
 
     def test_selection(self):
         """Check that the selection works properly"""
-        test_data_path = os.path.join(os.path.dirname(__file__), "datasets")
-        test_data = Table(f"{test_data_path}/adult.tab")
+        test_data = Table(self.test_data_path)
         self.send_signal(
             self.widget.Inputs.data,
             test_data,
@@ -54,8 +53,7 @@ class TestOWAsFairness(WidgetTest):
 
     def test_output(self):
         """Check that the selection is properly set"""
-        test_data_path = os.path.join(os.path.dirname(__file__), "datasets")
-        test_data = Table(f"{test_data_path}/adult.tab")
+        test_data = Table(self.test_data_path)
         self.send_signal(
             self.widget.Inputs.data,
             test_data,

@@ -15,7 +15,7 @@ from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup
 
 class TestOWEqualizedOdds(WidgetTest):
     def setUp(self) -> None:
-        self.test_data_path = os.path.join(os.path.dirname(__file__), "datasets")
+        self.test_data_path = "https://datasets.biolab.si/core/adult.tab"
         self.widget = self.create_widget(OWEqualizedOdds)
         self.as_fairness = self.create_widget(OWAsFairness)
         self.predictions = self.create_widget(OWPredictions)

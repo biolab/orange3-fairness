@@ -7,7 +7,7 @@ from orangecontrib.fairness.evaluation import scoring as bias_scoring
 
 
 def as_fairness_setup(self):
-    test_data = Table(f"{self.test_data_path}/adult.tab")
+    test_data = Table(f"{self.test_data_path}")
     self.send_signal(
         self.as_fairness.Inputs.data,
         test_data,

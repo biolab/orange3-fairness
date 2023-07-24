@@ -8,11 +8,12 @@ from Orange.widgets.utils.itemmodels import select_rows
 
 from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
 from orangecontrib.fairness.widgets.owdatasetbias import OWDatasetBias
+from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup
 
 
 class TestOWDatasetBias(WidgetTest):
     def setUp(self) -> None:
-        self.test_data_path = os.path.join(os.path.dirname(__file__), "datasets")
+        self.test_data_path = "https://datasets.biolab.si/core/adult.tab"
         self.widget = self.create_widget(OWDatasetBias)
         self.as_fairness = self.create_widget(OWAsFairness)
 
@@ -27,13 +28,13 @@ class TestOWDatasetBias(WidgetTest):
 
     def test_incorrect_input_data(self):
         """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
-        test_data = Table(f"{self.test_data_path}/adult.tab")
+        test_data = Table(self.test_data_path)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
 
     def test_input_as_fairness_data(self):
         """Check that the widget works with data from the as fairness widget"""
-        test_data = Table(f"{self.test_data_path}/adult.tab")
+        test_data = as_fairness_setup(self)
         self.send_signal(
             self.as_fairness.Inputs.data,
             test_data,

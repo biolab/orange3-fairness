@@ -7,16 +7,20 @@ from Orange.preprocess import preprocess
 
 from aif360.algorithms.preprocessing import Reweighing as ReweighingAlgorithm
 
-from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, check_fairness_data, is_standard_dataset
+from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, check_fairness_data
 
 
 class MzCom:
     # The __init__ method is called when the class is created and can have as many arguments as you want. MzCom(model) creates an instance of the class
     # The __call__ method is called when the class is called, it must only have one argument, which is the data. MzCom(model)(data) calls the __call__ method of the class
-    def __init__(self, model):
+    def __init__(self, model, original_domain=None):
+        self.original_domain = original_domain
         self.model = model
 
     def __call__(self, data):
+        # For creating a standard dataset we need the "Favorable class values" domain attribute, which may not be present in the data so we need to add it
+        if not data.domain.class_var:
+                data.domain.class_var = self.original_domain.class_var
         data, _, _ = table_to_standard_dataset(data)
         # Call the transform method of the model
         data = self.model.transform(data)
@@ -47,7 +51,7 @@ class ReweighingTransform(preprocess.Preprocess):
         # Create an instalce of the ReweighingModel, and call the __call__ method with the data as argument
         model = ReweighingModel()(data)
         # Create a new variable "weights" with the compute_value function, the compute_value function is the MzCom class, which when called calls the transform method of the model
-        weights = ContinuousVariable("weights", compute_value=MzCom(model))
+        weights = ContinuousVariable("weights", compute_value=MzCom(model, original_domain=data.domain))
         # Alternative for the compute_value: compute_value=lambda data, model=model: transf(data, model)
 
         # Add the variable "weights" to the domain of the data

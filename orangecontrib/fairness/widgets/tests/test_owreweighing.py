@@ -13,7 +13,7 @@ from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup
 
 class TestOWReweighing(WidgetTest):
     def setUp(self) -> None:
-        self.test_data_path = os.path.join(os.path.dirname(__file__), "datasets")
+        self.test_data_path = "https://datasets.biolab.si/core/adult.tab"
         self.widget = self.create_widget(OWReweighing)
         self.as_fairness = self.create_widget(OWAsFairness)
 
@@ -25,7 +25,7 @@ class TestOWReweighing(WidgetTest):
 
     def test_incorrect_input_data(self):
         """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
-        test_data = Table(f"{self.test_data_path}/adult.tab")
+        test_data = Table(self.test_data_path)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
         

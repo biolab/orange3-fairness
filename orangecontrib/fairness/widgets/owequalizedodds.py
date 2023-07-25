@@ -14,7 +14,7 @@ from orangecontrib.fairness.modeling.postprocessing import PostprocessingLearner
 class OWEqualizedOdds(OWBaseLearner):
     name = "Equalized Odds Postprocessing"
     description = "Postprocessing fairness algorithm which changes the predictions of a classifier to satisfy equalized odds."
-    # icon = "icons/EqualizedOdds.svg"
+    icon = "icons/eq_odds_postprocessing.svg"
     # priority = 10
 
     LEARNER = PostprocessingLearner

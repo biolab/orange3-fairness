@@ -40,7 +40,7 @@ class AdversarialDebiasingRunner:
 class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     name = "Adversarial Debiasing"
     description = "Adversarial Debiasing classification algorithm with or without fairness constraints."
-    # icon = "icons/AdversarialDebiasing.svg"
+    icon = "icons/adversarial_debiasing.svg"
     # priority = 10
 
     # For inputs and outputs we use the same as in OWBaseLearner superclass

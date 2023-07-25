@@ -68,7 +68,7 @@ class ReweighingTransform(preprocess.Preprocess):
 class OWReweighing(OWWidget):
     name = "Reweighing"
     description = "Applies the reweighing algorithm to a dataset, which adjusts the weights of rows."
-    # icon = 'icons/owreweighing.svg'
+    icon = 'icons/reweighing.svg'
     # priority = 0
 
     want_control_area = False

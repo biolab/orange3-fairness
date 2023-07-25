@@ -12,7 +12,7 @@ from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, chec
 class OWDatasetBias(OWWidget):
     name = "Dataset Bias"
     description = "Computes the bias of a dataset. More specifically, it computes the disparate impact and statistical parity difference metrics for the dataset."
-    # icon = "icons/bias.svg"
+    icon = "icons/dataset_bias.svg"
     # priority = 0
 
     want_control_area = False

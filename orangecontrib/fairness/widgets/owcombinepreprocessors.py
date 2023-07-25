@@ -8,7 +8,7 @@ from Orange.preprocess.preprocess import Preprocess, PreprocessorList
 class OWCombinePreprocessors(OWWidget):
     name = "Combine Preprocessors"
     description = "Combine multiple preprocessors into one."
-    # icon = "icons/combine_preprocessors.svg"
+    icon = "icons/combine_preprocessors.svg"
     # priority = 0
 
     want_control_area = False

@@ -87,6 +87,8 @@ class PostprocessingLearner(Learner):
 
             # Fit the model TODO: Split the data into train and test data so we can fit the postprocessor on the test data to avoid data leakage
             model = self.learner.fit_storage(data)
+            # Because I use fit_storage instead of __call__ I need to set the original domain manually (this is needed for the postprocessor to be compatible with adversarial debiasing)
+            model.original_domain = data.domain
             predictions, _ = model.predict_storage(
                 data
             )  # Returns the predictions and the scores

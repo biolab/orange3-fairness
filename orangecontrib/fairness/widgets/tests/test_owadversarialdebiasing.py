@@ -83,8 +83,8 @@ class TestOWAdversarialDebiasing(WidgetTest):
     #     self.widget.number_of_epochs = 10
     #     self.widget.debias = False
 
-    #     data_sample = Table("orange_workflows/testing_data/adult_sample.pkl")
-    #     data_remaining = Table("orange_workflows/testing_data/adult_remaining.pkl")
+    #     data_sample = Table("orangedemo/tests/datasets/adult_sample.pkl")
+    #     data_remaining = Table("orangedemo/tests/datasets/adult_remaining.pkl")
     #     self.send_signal(self.widget.Inputs.data, data_sample)
 
     #     self.wait_until_finished(self.widget, timeout=2000000)
@@ -110,8 +110,8 @@ class TestOWAdversarialDebiasing(WidgetTest):
     #     self.widget.number_of_epochs = 10
     #     self.widget.debias = False
 
-    #     data_sample = Table("orange_workflows/testing_data/adult_sample.pkl")
-    #     data_remaining = Table("orange_workflows/testing_data/adult_remaining.pkl")
+    #     data_sample = Table("orangedemo/tests/datasets/adult_sample.pkl")
+    #     data_remaining = Table("orangedemo/tests/datasets/adult_remaining.pkl")
     #     self.send_signal(self.widget.Inputs.data, data_sample)
 
     #     self.wait_until_finished(self.widget, timeout=2000000)
@@ -135,8 +135,8 @@ class TestOWAdversarialDebiasing(WidgetTest):
     #     self.widget.number_of_epochs = 10
     #     self.widget.debias = False
 
-    #     data_sample = Table("orange_workflows/testing_data/adult_sample.pkl")
-    #     data_remaining = Table("orange_workflows/testing_data/adult_remaining.pkl")
+    #     data_sample = Table("orangedemo/tests/datasets/adult_sample.pkl")
+    #     data_remaining = Table("orangedemo/tests/datasets/adult_remaining.pkl")
 
     #     learner = self.widget.create_learner()
 

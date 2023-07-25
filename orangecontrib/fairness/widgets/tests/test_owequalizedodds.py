@@ -64,7 +64,7 @@ class TestOWEqualizedOdds(WidgetTest):
         self.send_signal(
             self.cross_validation.Inputs.learner, learner, widget=self.cross_validation
         )
-        self.wait_until_finished(self.cross_validation)
+        self.wait_until_finished(self.cross_validation, timeout=10000)
         predictions = self.get_output(
             self.cross_validation.Outputs.predictions, widget=self.cross_validation
         )

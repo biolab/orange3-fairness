@@ -68,7 +68,7 @@ if __name__ == "__main__":
     WidgetPreview(OWEqualizedOdds).run()
 
     a = QApplication(sys.argv)
-    table = Table("orangedemo/tests/datasets/adult_fairness.tab")
+    table = Table("orangedemo/tests/datasets/adult_race_all.pkl")
     widget = OWEqualizedOdds()
     widget.set_data(table)
     widget.set_learner(LogisticRegressionLearner())

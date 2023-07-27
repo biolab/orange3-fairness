@@ -155,10 +155,6 @@ class OWAsFairness(OWWidget):
             ):
                 self.openContext(domain)
 
-        print(f"Protected Attribute: {self.protected_attribute}@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-        print(f"Favorable Class Value: {self.favorable_class_value}")
-        print(f"Privileged Protected Attribute Values: {self.privileged_PA_values}")
-
         # Apply the changes and send the data to the output
         self.commit.now()  # In the set_data we always have a commit.now() instead of a commit.deferred() because we want to apply the changes as soon as the input data changes.
 
@@ -168,14 +164,12 @@ class OWAsFairness(OWWidget):
         # Check if the privileged_PA_values match the values of the protected attribute variable
         # This is needed because when loading a old workflow, the domain sometimes doesn't change the protected_attribute
         if not set(self.privileged_PA_values).issubset(set(self.protected_attribute.values)):
-            print("Privileged Protected Attribute Values not are valid")
             self.change_values(clear_PA_values=True)
         # Check if the self.controls.privileged_PA_values.model matches the values of the protected attribute variable
         # This is needed when loading an old workflow the displayed values might not match the values of the protected attribute variable
         elif not set(self.controls.privileged_PA_values.model()).issubset(
             set(self.protected_attribute.values)
         ):
-            print("Privileged Protected Attribute Values not are valid")
             self.change_values(clear_PA_values=False)
 
 

@@ -124,5 +124,36 @@ class TestOWEqualizedOdds(WidgetTest):
         self.assertFalse(self.widget.repeatable)
 
 
+    # def test_with_learner_widget(self):
+    #     from Orange.widgets.model.owrandomforest import OWRandomForest
+
+    #     random_forest_widget = self.create_widget(OWRandomForest)
+    #     learner = self.get_output(random_forest_widget.Outputs.learner, random_forest_widget)
+
+    #     self.assertIsNotNone(learner)
+
+    #     test_data = as_fairness_setup(self)
+    #     self.send_signal(self.widget.Inputs.data, test_data)
+    #     self.send_signal(self.widget.Inputs.learner, learner)
+    #     learner = self.widget.create_learner()
+    #     model = learner(test_data)
+
+    #     self.send_signal(
+    #         self.predictions.Inputs.data, test_data, widget=self.predictions
+    #     )
+    #     self.send_signal(
+    #         self.predictions.Inputs.predictors, model, widget=self.predictions
+    #     )
+    #     predictions = self.get_output(
+    #         self.predictions.Outputs.predictions, widget=self.predictions
+    #     )
+    #     results = self.get_output(
+    #         self.predictions.Outputs.evaluation_results, widget=self.predictions
+    #     )
+
+    #     self.assertIsNotNone(predictions)
+    #     self.assertIsNotNone(results)
+
+
 if __name__ == "__main__":
     unittest.main()

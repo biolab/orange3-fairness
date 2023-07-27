@@ -86,7 +86,9 @@ class PostprocessingLearner(Learner):
             data = self.preprocess(data)
 
             # Fit the model TODO: Split the data into train and test data so we can fit the postprocessor on the test data to avoid data leakage
-            model = self.learner.fit_storage(data)
+            # The reason why we use _fit_model here (or predict_storage later) instead of __call__ is because we don't want the learner/model to apply its own preprocessing
+            # The resaon why we use _fit_model here instead of fit_storage is because fit_storage is not implemented for all learners and causes an error
+            model = self.learner._fit_model(data) #<------------ This line causes the error
             # Because I use fit_storage instead of __call__ I need to set the original domain manually (this is needed for the postprocessor to be compatible with adversarial debiasing)
             model.original_domain = data.domain
             predictions, _ = model.predict_storage(

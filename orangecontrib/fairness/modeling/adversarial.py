@@ -55,7 +55,6 @@ class AdversarialDebiasingModel(Model):
 
 class AdversarialDebiasingLearner(Learner):
     __returns__ = AdversarialDebiasingModel
-    name = "Adversarial Debiasing"
     # List of preprocessors, these get applied when the __call__ function is called
     preprocessors = [
         Normalize()

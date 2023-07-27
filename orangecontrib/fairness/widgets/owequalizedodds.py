@@ -9,6 +9,7 @@ from AnyQt.QtWidgets import QFormLayout
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.postprocessing import PostprocessingLearner
+from orangecontrib.fairness.widgets.utils import check_fairness_data
 
 
 class OWEqualizedOdds(OWBaseLearner):
@@ -43,10 +44,15 @@ class OWEqualizedOdds(OWBaseLearner):
             )
         )
 
+    @Inputs.data
+    @check_fairness_data
+    def set_data(self, data: Table):
+        super().set_data(data)
+
+
     @Inputs.learner
     def set_learner(self, learner: Learner):
         self.normal_learner = learner
-        self.handleNewSignals()
 
     def create_learner(self):
         if not self.normal_learner:
@@ -56,6 +62,13 @@ class OWEqualizedOdds(OWBaseLearner):
             preprocessors=self.preprocessors,
             repeatable=self.repeatable,
         )
+    
+    def handleNewSignals(self):
+        if not self.normal_learner:
+            return
+        self.update_learner() 
+        if self.data is not None:
+            self.update_model()
 
 
 if __name__ == "__main__":

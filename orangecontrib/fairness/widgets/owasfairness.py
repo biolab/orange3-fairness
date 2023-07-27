@@ -70,7 +70,7 @@ class OWAsFairness(OWWidget):
             self,
             "protected_attribute",
             model=protected_attribute_model,
-            callback=[self.changeValues, self.commit.deferred],
+            callback=[self.change_values, self.commit.deferred],
             searchable=True,
         )
 
@@ -147,26 +147,51 @@ class OWAsFairness(OWWidget):
 
             # If atleast one value for each variable is selected, then open the context for the widget using the new domain
             # This means that these settings will be remembered the next time the widget receives the same input data.
+            # If the input data allready has a known domain, then the saved settings will be used.
             if (
                 self.protected_attribute is not None
                 and self.favorable_class_value is not None
                 and len(self.controls.privileged_PA_values.model()) > 0
             ):
                 self.openContext(domain)
-                # Call changeValues in case the openContext changed the protected attribute variable
-                self.changeValues(clear_PA_values=False)
+
+        print(f"Protected Attribute: {self.protected_attribute}@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        print(f"Favorable Class Value: {self.favorable_class_value}")
+        print(f"Privileged Protected Attribute Values: {self.privileged_PA_values}")
 
         # Apply the changes and send the data to the output
         self.commit.now()  # In the set_data we always have a commit.now() instead of a commit.deferred() because we want to apply the changes as soon as the input data changes.
 
-    # This function is called when the user changes the protected attribute variable
-    # It changes the values of the privileged_PA_values_model PyListModel
-    def changeValues(self, clear_PA_values=True) -> None:
-        # Clear the list of values
+    def openContext(self, *a):
+        super().openContext(*a)
+    
+        # Check if the privileged_PA_values match the values of the protected attribute variable
+        # This is needed because when loading a old workflow, the domain sometimes doesn't change the protected_attribute
+        if not set(self.privileged_PA_values).issubset(set(self.protected_attribute.values)):
+            print("Privileged Protected Attribute Values not are valid")
+            self.change_values(clear_PA_values=True)
+        # Check if the self.controls.privileged_PA_values.model matches the values of the protected attribute variable
+        # This is needed when loading an old workflow the displayed values might not match the values of the protected attribute variable
+        elif not set(self.controls.privileged_PA_values.model()).issubset(
+            set(self.protected_attribute.values)
+        ):
+            print("Privileged Protected Attribute Values not are valid")
+            self.change_values(clear_PA_values=False)
+
+
+
+
+
+    # This function is normally called when the user changes the protected attribute variable
+    # It changes the values of the privileged_PA_values_model PyListModel (the list of displayed privileged PA values) and the selected privileged PA values (self.privileged_PA_values)
+    def change_values(self, clear_PA_values=True) -> None:
+        # Change the list of displayed privileged PA values
         self.controls.privileged_PA_values.model().clear()
         # Fill the list with the values of the new protected attribute variable
         for value in self.protected_attribute.values:
             self.controls.privileged_PA_values.model().append(value)
+
+        # Change the selected privileged PA values            
         if clear_PA_values:
             self.privileged_PA_values = (
                 [self.controls.privileged_PA_values.model()[0]]
@@ -215,7 +240,6 @@ class OWAsFairness(OWWidget):
         data = None
         if self._data is not None:
             data = self.as_fairness_data(self._data)
-
         self.Outputs.data.send(data)
 
 

@@ -53,6 +53,8 @@ class OWEqualizedOdds(OWBaseLearner):
     @Inputs.learner
     def set_learner(self, learner: Learner):
         self.normal_learner = learner
+        if learner is not None:
+            self.learner_name = f"Equalized Odds: {learner.name}"
 
     def create_learner(self):
         if not self.normal_learner:

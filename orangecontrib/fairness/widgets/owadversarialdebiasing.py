@@ -175,6 +175,8 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         self.set_lambda()
         self._debias_changed()
 
+    # ---------Methods related to UI------------
+
     # Responsible for the text of the lambda slider
     def set_lambda(self):
         self.strength_D = self.lambdas[self.lambda_index]
@@ -184,6 +186,39 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     @property
     def selected_lambda(self):
         return self.lambdas[self.lambda_index]
+    
+    # Responsible for enabling/disabling the slider
+    def _debias_changed(self):
+        self.slider.setEnabled(self.debias)
+        self.apply()
+
+    # ---------Methods related to inputs--------------
+
+    @Inputs.data
+    @check_fairness_data
+    def set_data(self, data):
+        self.cancel()
+        super().set_data(data)
+
+    @Inputs.preprocessor
+    def set_preprocessor(self, preprocessor):
+        self.custom_preprocessor_message(preprocessor)
+        self.cancel()
+        super().set_preprocessor(preprocessor)
+
+    def custom_preprocessor_message(self, preprocessor):
+        self.Information.add_message(
+            "custom_preprocessor_detected",
+            "Ignoring default preprocessing. \n"
+            "Default preprocessing (scailing), has been replaced with user-specified "
+            "preprocessors. Problems may occur if these are inadequate"
+            "for the given data.",
+        )
+        self.Information.custom_preprocessor_detected.clear()
+        if preprocessor is not None:
+            self.Information.custom_preprocessor_detected()
+
+    #----------Methods related to the learner/model--------------
 
     # Responsible for creating the learner with the parameters we want
     # It is called in the superclass by the update_learner method
@@ -201,13 +236,18 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
             kwargs["adversary_loss_weight"] = self.selected_lambda
         return self.LEARNER(**kwargs, preprocessors=self.preprocessors)
 
-    def handleNewSignals(self):
-        self.apply()  # This calls the update_learner and update_model methods
 
-    # Responsible for enabling/disabling the slider
-    def _debias_changed(self):
-        self.slider.setEnabled(self.debias)
-        self.apply()
+    # This method is called when the input data is changed
+    # it is responsible for fitting the learner and sending the created model to the output
+    # There is also a update_learner method which is called in the apply method of the superclass (along with update_model)
+    def update_model(self):
+        self.cancel()
+        # This method will run the run_task method in a separate thread and pass the learner and data as arguments
+        if self.data is not None:
+            self.start(AdversarialDebiasingRunner.run, self.learner, self.data)
+        else:
+            self.Outputs.model.send(None)
+
 
     def get_learner_parameters(self):
         parameters = [
@@ -222,46 +262,15 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
         return parameters
 
-    @Inputs.data
-    @check_fairness_data
-    def set_data(self, data):
-        self.cancel()
-        super().set_data(data)
+    #-----------Methods related to threading and output-------------
 
-    def custom_preprocessor_message(self, preprocessor):
-        self.Information.add_message(
-            "custom_preprocessor_detected",
-            "Ignoring default preprocessing. \n"
-            "Default preprocessing (scailing), has been replaced with user-specified "
-            "preprocessors. Problems may occur if these are inadequate"
-            "for the given data.",
-        )
-        self.Information.custom_preprocessor_detected.clear()
-        if preprocessor is not None:
-            self.Information.custom_preprocessor_detected()
-
-    @Inputs.preprocessor
-    def set_preprocessor(self, preprocessor):
-        self.custom_preprocessor_message(preprocessor)
-        self.cancel()
-        super().set_preprocessor(preprocessor)
-
-    # This method is called when the input data is changed
-    # it is responsible for fitting the learner and sending the created model to the output
-    # There is also a update_learner method which is called in the apply method of the superclass (along with update_model)
-    def update_model(self):
-        self.cancel()
-        # This method will run the run_task method in a separate thread and pass the learner and data as arguments
-        if self.data is not None:
-            self.start(AdversarialDebiasingRunner.run, self.create_learner(), self.data)
-        else:
-            self.Outputs.model.send(None)
 
     def on_partial_result(self, _):
         pass
 
     def on_done(self, result: Model):
         assert isinstance(result, Model) or result is None
+        self.model = result
         self.Outputs.model.send(result)
 
     def on_exception(self, ex):

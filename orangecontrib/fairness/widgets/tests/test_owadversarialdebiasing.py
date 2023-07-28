@@ -76,6 +76,29 @@ class TestOWAdversarialDebiasing(WidgetTest):
         print("Train test split results:")
         print_metrics(results)
 
+    def test_learner_output(self):
+        """Check if the widget outputs a learner"""
+        self.widget.number_of_epochs = 10
+        self.widget.debias = True
+
+        learner = self.widget.create_learner()
+
+        self.assertIsNotNone(learner)
+
+
+    def test_model_output(self):
+        """Check if the widget outputs a model"""
+        self.widget.number_of_epochs = 5
+        self.widget.debias = True
+        test_data = as_fairness_setup(self)
+
+        self.send_signal(self.widget.Inputs.data, test_data)
+        self.wait_until_finished(self.widget, timeout=20000)
+        model = self.get_output(self.widget.Outputs.model)
+
+        self.assertIsNotNone(model)
+
+
     # def test_compatibility_with_test_and_score(self):
     #     """Check that the widget works with the predictions widget"""
     #     self.test_and_score = self.create_widget(OWTestAndScore)

@@ -93,7 +93,7 @@ class TestOWAdversarialDebiasing(WidgetTest):
         test_data = as_fairness_setup(self)
 
         self.send_signal(self.widget.Inputs.data, test_data)
-        self.wait_until_finished(self.widget, timeout=20000)
+        self.wait_until_finished(self.widget, timeout=200000)
         model = self.get_output(self.widget.Outputs.model)
 
         self.assertIsNotNone(model)

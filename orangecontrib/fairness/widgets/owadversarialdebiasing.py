@@ -55,11 +55,10 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     # This message is shown when the user specifies custom preprocessors
     class Information(OWBaseLearner.Information):
         ignored_preprocessors = Msg(            
-            "custom_preprocessor_detected",
             "Ignoring default preprocessing. \n"
             "Default preprocessing (scailing), has been replaced with user-specified "
             "preprocessors. Problems may occur if these are inadequate"
-            "for the given data.",)
+            "for the given data.")
 
     # Here we define the learner we want to use, in this case it is the AdversarialDebiasingLearner
     LEARNER = AdversarialDebiasingLearner

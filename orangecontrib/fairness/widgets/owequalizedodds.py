@@ -9,7 +9,7 @@ from AnyQt.QtWidgets import QFormLayout
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.postprocessing import PostprocessingLearner
-from orangecontrib.fairness.widgets.utils import check_fairness_data
+from orangecontrib.fairness.widgets.utils import check_fairness_data, check_for_fairness_learner_or_preprocessor
 
 
 class OWEqualizedOdds(OWBaseLearner):
@@ -51,10 +51,17 @@ class OWEqualizedOdds(OWBaseLearner):
 
 
     @Inputs.learner
+    @check_for_fairness_learner_or_preprocessor
     def set_learner(self, learner: Learner):
         self.normal_learner = learner
         if learner is not None:
             self.learner_name = f"Equalized Odds: {learner.name}"
+
+    @Inputs.preprocessor
+    @check_for_fairness_learner_or_preprocessor
+    def set_preprocessor(self, preprocessor):
+        super().set_preprocessor(preprocessor)
+
 
     def create_learner(self):
         if not self.normal_learner:

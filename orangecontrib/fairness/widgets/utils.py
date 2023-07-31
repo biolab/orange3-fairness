@@ -4,14 +4,64 @@ from aif360.datasets import StandardDataset
 from Orange.data import Domain
 from Orange.widgets.utils.messages import UnboundMsg
 from Orange.data import Table, Domain
-
+from Orange.preprocess.preprocess import PreprocessorList
 
 MISSING_FAIRNESS_ATTRIBUTES: str = (
-    "The dataset does not contain the fairness attributes. "
+    "The dataset does not contain the fairness attributes. \n"
     'Use the "As Fairness Data" widget to add them. '
 )
 
 MISSING_ROWS: str = "Rows with missing values detected. They will be omitted."
+
+REWEIGHING_PREPROCESSOR: str = (
+    "The reweighing preprocessor currently can not be used as a preprocessor for this widget. \n"
+    "You can instead use it to preprocess the data which you can use as input for this widget. "
+)
+
+ADVERSARIAL_LEARNER: str = (
+    "The adversarial learner currently can not be used as a learner for this widget. "
+)
+
+
+#TODO: Make the fairness widgets compatible with eachother.
+def check_for_fairness_learner_or_preprocessor(f):
+    """Check if the preprocessor is or includes a reweighing preprocessor."""
+
+    from orangecontrib.fairness.widgets.owreweighing import ReweighingTransform
+    from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLearner
+
+    @wraps(f)
+    def wrapper(widget, input, *args, **kwargs):
+        # Add the preprocessor error message
+        widget.Error.add_message(
+            "reweighing_preprocessor", UnboundMsg(REWEIGHING_PREPROCESSOR)
+        )
+        widget.Error.reweighing_preprocessor.clear()
+
+        # Add the adversarial learner error message
+        widget.Error.add_message(
+            "adversarial_learner", UnboundMsg(ADVERSARIAL_LEARNER)
+        )
+        widget.Error.adversarial_learner.clear()
+
+        if isinstance(input, ReweighingTransform):
+            widget.Error.reweighing_preprocessor()
+            input = None
+        
+        elif isinstance(input, PreprocessorList) and any(
+            isinstance(p, ReweighingTransform) for p in input.preprocessors
+        ):
+            widget.Error.reweighing_preprocessor()
+            input = None
+        
+        elif isinstance(input, AdversarialDebiasingLearner):
+            widget.Error.adversarial_learner()
+            input = None
+        
+        return f(widget, input, *args, **kwargs)
+
+    return wrapper
+
 
 
 def contains_fairness_attributes(domain: Domain) -> bool:

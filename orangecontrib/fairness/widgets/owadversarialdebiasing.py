@@ -12,7 +12,7 @@ from AnyQt.QtWidgets import QFormLayout, QLabel
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLearner
-from orangecontrib.fairness.widgets.utils import check_fairness_data
+from orangecontrib.fairness.widgets.utils import check_fairness_data, check_for_fairness_learner_or_preprocessor
 
 
 class InterruptException(Exception):
@@ -211,6 +211,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         super().set_data(data)
 
     @Inputs.preprocessor
+    @check_for_fairness_learner_or_preprocessor
     def set_preprocessor(self, preprocessor):
         self.cancel()
         super().set_preprocessor(preprocessor)

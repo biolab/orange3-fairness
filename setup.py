@@ -1,12 +1,37 @@
 from setuptools import setup, find_packages
+from os import path
+
+LONG_DESCRIPTION = open(
+    path.join(path.dirname(__file__), "README.pypi"), "r", encoding="utf-8"
+).read()
 
 setup(
-    name="Fairness",
+    name="Orange3-Fairness",
+    version="0.1.0",
+    author="Bioinformatics Laboratory, FRI UL",
+    author_email="contact@orange.biolab.si",
+    maintainer="Zan Mervic",
+    description="Orange3 add-on for fairness-aware machine learning.",
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/x-rst',
+    license="GPL3+",
+    keywords=(
+        "orange3 add-on",
+        "orange3 fairness",
+    ),
+
     packages=find_packages(),
     package_data={
         "orangecontrib.fairness.widgets": ["icons/*"],
         },
-    classifiers=["Example :: Invalid"],
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Science/Research",
+        "Programming Language :: Python :: 3 :: Only",
+        "Operating System :: MacOS",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: Unix",
+        ],
     entry_points={
         "orange3.addon": ("Orange3-Fairness = orangecontrib.fairness",),
         "orange.widgets": ("Fairness = orangecontrib.fairness.widgets",),

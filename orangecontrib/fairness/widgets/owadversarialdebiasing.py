@@ -6,6 +6,7 @@ from Orange.widgets.utils.owlearnerwidget import OWBaseLearner
 from Orange.data import Table
 from Orange.widgets.utils.concurrent import TaskState, ConcurrentWidgetMixin
 from Orange.base import Model
+from Orange.widgets.widget import Msg
 
 from AnyQt.QtWidgets import QFormLayout, QLabel
 from AnyQt.QtCore import Qt
@@ -49,6 +50,16 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
     class Outputs(OWBaseLearner.Outputs):
         pass
+
+    # Changing the ignored preprocessors message slightly to fit the new widget
+    # This message is shown when the user specifies custom preprocessors
+    class Information(OWBaseLearner.Information):
+        ignored_preprocessors = Msg(            
+            "custom_preprocessor_detected",
+            "Ignoring default preprocessing. \n"
+            "Default preprocessing (scailing), has been replaced with user-specified "
+            "preprocessors. Problems may occur if these are inadequate"
+            "for the given data.",)
 
     # Here we define the learner we want to use, in this case it is the AdversarialDebiasingLearner
     LEARNER = AdversarialDebiasingLearner
@@ -202,21 +213,8 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
     @Inputs.preprocessor
     def set_preprocessor(self, preprocessor):
-        self.custom_preprocessor_message(preprocessor)
         self.cancel()
         super().set_preprocessor(preprocessor)
-
-    def custom_preprocessor_message(self, preprocessor):
-        self.Information.add_message(
-            "custom_preprocessor_detected",
-            "Ignoring default preprocessing. \n"
-            "Default preprocessing (scailing), has been replaced with user-specified "
-            "preprocessors. Problems may occur if these are inadequate"
-            "for the given data.",
-        )
-        self.Information.custom_preprocessor_detected.clear()
-        if preprocessor is not None:
-            self.Information.custom_preprocessor_detected()
 
     #----------Methods related to the learner/model--------------
 

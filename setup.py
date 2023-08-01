@@ -1,9 +1,12 @@
 from setuptools import setup, find_packages
 from os import path
 
-LONG_DESCRIPTION = open(
-    path.join(path.dirname(__file__), "README.pypi"), "r", encoding="utf-8"
-).read()
+try:
+    LONG_DESCRIPTION = open(
+        path.join(path.dirname(__file__), "README.pypi"), "r", encoding="utf-8"
+    ).read()
+except FileNotFoundError:
+    LONG_DESCRIPTION = ""
 
 setup(
     name="Orange3-Fairness",

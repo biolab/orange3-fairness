@@ -1,4 +1,4 @@
-<h1 align="center">Orange3-Survival-Analysis</h1>
+<h1 align="center">Orange3-Fairness</h1>
 
 
 <p align="center">

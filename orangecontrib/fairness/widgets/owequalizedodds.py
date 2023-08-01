@@ -16,7 +16,7 @@ class OWEqualizedOdds(OWBaseLearner):
     name = "Equalized Odds Postprocessing"
     description = "Postprocessing fairness algorithm which changes the predictions of a classifier to satisfy equalized odds."
     icon = "icons/eq_odds_postprocessing.svg"
-    # priority = 10
+    priority = 40
 
     LEARNER = PostprocessingLearner
     repeatable = Setting(True)

@@ -13,7 +13,7 @@ class OWDatasetBias(OWWidget):
     name = "Dataset Bias"
     description = "Computes the bias of a dataset. More specifically, it computes the disparate impact and statistical parity difference metrics for the dataset."
     icon = "icons/dataset_bias.svg"
-    # priority = 0
+    priority = 10
 
     want_control_area = False
     resizing_enabled = False

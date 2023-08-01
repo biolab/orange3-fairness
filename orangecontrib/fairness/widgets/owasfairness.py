@@ -9,7 +9,7 @@ from Orange.preprocess import RemoveNaNRows
 
 from Orange.widgets.utils.widgetpreview import WidgetPreview
 
-from orangecontrib.fairness.widgets.utils import check_for_missing_rows
+from orangecontrib.fairness.widgets.utils import check_for_missing_rows, check_data_structure
 
 
 class OWAsFairness(OWWidget):
@@ -17,7 +17,7 @@ class OWAsFairness(OWWidget):
     name = "As Fairness Data"
     description = "Converts a dataset to a fairness dataset with marked favorable class values, protected attributes and priviliged protected attribute values."
     icon = 'icons/as_fairness.svg'
-    # priority = 0
+    priority = 0
 
     want_main_area = False
     resizing_enabled = False
@@ -93,6 +93,7 @@ class OWAsFairness(OWWidget):
 
     @Inputs.data
     @check_for_missing_rows
+    @check_data_structure
     def set_data(self, data: Table) -> None:
         self.closeContext()
         self._data = None
@@ -171,8 +172,6 @@ class OWAsFairness(OWWidget):
             set(self.protected_attribute.values)
         ):
             self.change_values(clear_PA_values=False)
-
-
 
 
 

@@ -69,7 +69,7 @@ class OWReweighing(OWWidget):
     name = "Reweighing"
     description = "Applies the reweighing algorithm to a dataset, which adjusts the weights of rows."
     icon = 'icons/reweighing.svg'
-    # priority = 0
+    priority = 20
 
     want_control_area = False
     resizing_enabled = False

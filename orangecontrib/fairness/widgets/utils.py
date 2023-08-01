@@ -13,6 +13,23 @@ MISSING_FAIRNESS_ATTRIBUTES: str = (
 
 MISSING_ROWS: str = "Rows with missing values detected. They will be omitted."
 
+MISSING_CLASS_VARIABLE: str = (
+    "The dataset does not contain a class variable. \n"
+    "The fairness metrics can only be used with datasets containing a (categorical) class variable. \n"
+)
+
+NUMERICAL_CLASS_VARIABLE: str = (
+    "The class variable is numerical. \n"
+    "The fairness metrics can only be used with categorical class variables. \n"
+    "Use the discretize widget to discretize the class variable."
+)
+
+NO_CATEGORICAL_ATTRIBUTES: str = (
+    "The dataset does not contain any categorical attributes except the class variable. \n"
+    "The fairness metrics can only be used with datasets containing categorical attributes. \n"
+    "Use the discretize widget to discretize some of the attributes."
+)
+
 REWEIGHING_PREPROCESSOR: str = (
     "The reweighing preprocessor currently can not be used as a preprocessor for this widget. \n"
     "You can instead use it to preprocess the data which you can use as input for this widget. "
@@ -112,6 +129,51 @@ def check_for_missing_rows(f):
         return f(widget, data, *args, **kwargs)
 
     return wrapper
+
+
+def check_data_structure(f):
+    """Check if the data has a (categorical) class variable and more than one categorical attribute."""
+
+    @wraps(f)
+    def wrapper(widget, data: Table, *args, **kwargs):
+        widget.Error.add_message(
+            "missing_class_variable", UnboundMsg(MISSING_CLASS_VARIABLE)
+        )
+        widget.Error.add_message(
+            "numerical_class_variable", UnboundMsg(NUMERICAL_CLASS_VARIABLE)
+        )
+        widget.Error.add_message(
+            "no_categorical_attributes", UnboundMsg(NO_CATEGORICAL_ATTRIBUTES)
+        )
+        
+        widget.Error.missing_class_variable.clear()
+        widget.Error.numerical_class_variable.clear()
+        widget.Error.no_categorical_attributes.clear()
+
+        if data is not None and isinstance(data, Table):
+            if not data.domain.class_var:
+                widget.Error.missing_class_variable()
+                data = None
+            elif not data.domain.class_var.is_discrete:
+                widget.Error.numerical_class_variable()
+                data = None
+
+            # Check if there are any categorical attributes
+            if data is not None:
+                categorical = False
+                for attribute in data.domain.attributes:
+                    if attribute.is_discrete:
+                        categorical = True
+                        break
+
+                if not categorical:
+                    widget.Error.no_categorical_attributes()
+                    data = None
+            
+        return f(widget, data, *args, **kwargs)
+
+    return wrapper
+
 
 
 #############################################################

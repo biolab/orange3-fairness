@@ -9,7 +9,7 @@ class OWCombinePreprocessors(OWWidget):
     name = "Combine Preprocessors"
     description = "Combine multiple preprocessors into one."
     icon = "icons/combine_preprocessors.svg"
-    # priority = 0
+    priority = 60
 
     want_control_area = False
     resizing_enabled = False

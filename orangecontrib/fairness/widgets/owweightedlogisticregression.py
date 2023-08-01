@@ -21,7 +21,7 @@ class OWWeightedLogisticRegression(Orange.widgets.model.owlogisticregression.OWL
                   "LASSO (L1) or ridge (L2) regularization, that can use instance weights "\
                   "in the training and prediction process."
     icon = "icons/weighted_log_reg.svg"
-    # priority = 70
+    priority = 50
     keywords = "weighted logistic regression"
     replaces = []
 

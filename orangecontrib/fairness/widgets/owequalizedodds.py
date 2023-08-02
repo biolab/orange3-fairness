@@ -25,8 +25,8 @@ class EqualizedOddsRunner:
         if data is None:
             return None
 
-        def callback(i: float, msg: str = None) -> bool:
-            state.set_progress_value(i)
+        def callback(progress: float, msg: str = None) -> bool:
+            state.set_progress_value(progress)
             if state.is_interruption_requested():
                 raise InterruptException
 

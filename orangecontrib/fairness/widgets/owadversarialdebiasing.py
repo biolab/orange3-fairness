@@ -27,8 +27,8 @@ class AdversarialDebiasingRunner:
         if data is None:
             return None
 
-        def callback(i: float, msg: str = None) -> bool:
-            state.set_progress_value(i)
+        def callback(progress: float, msg: str = None) -> bool:
+            state.set_progress_value(progress)
             # if msg:
             #     state.set_status(msg)
             if state.is_interruption_requested():

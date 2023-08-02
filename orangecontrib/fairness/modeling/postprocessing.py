@@ -88,10 +88,10 @@ class PostprocessingLearner(Learner):
 
             # Fit the model, remove the learner and model preprocessing because we don't want them to apply their default preprocessing
             # TODO: Split the data into train and test data so we can fit the postprocessor on the test data to avoid data leakage
-            self.learner.preprocess = lambda data: data
+            self.learner.preprocess = lambda data, progress_callback: data
             model = self.learner(data, self.callback)
             # Get the predictions from the model
-            model.preprocess = lambda data: data
+            model.preprocess = lambda data, progress_callback: data
             predictions = model(data)
 
 

@@ -55,7 +55,6 @@ class PostprocessingModel(Model):
 
 class PostprocessingLearner(Learner):
     __returns__ = PostprocessingModel
-    callback = None
 
     def __init__(self, learner, preprocessors=None, repeatable=None):
         super().__init__(preprocessors=preprocessors)
@@ -88,7 +87,8 @@ class PostprocessingLearner(Learner):
 
             # Fit the model
             # TODO: Split the data into train and test data so we can fit the postprocessor on the test data to avoid data leakage
-            model = self.learner(data, self.callback)
+            # model = self.learner(data, self.callback) <- this is how it should be in order to make the learner call my callback but it doesn't work
+            model = self.learner(data)
             # Get the predictions from the model
             predictions = model(data)
 
@@ -113,7 +113,7 @@ class PostprocessingLearner(Learner):
             raise TypeError("Data is not of type Table")
 
     def __call__(self, data, progress_callback=None):
-        self.callback = progress_callback
+        self.learner.callback = progress_callback
         model = super().__call__(data)
         model.params = self.params
         return model

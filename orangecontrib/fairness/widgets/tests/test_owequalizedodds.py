@@ -19,7 +19,7 @@ class TestOWEqualizedOdds(WidgetTest):
         self.widget = self.create_widget(OWEqualizedOdds)
         self.as_fairness = self.create_widget(OWAsFairness)
         self.predictions = self.create_widget(OWPredictions)
-        self.cross_validation = self.create_widget(OWTestAndScore)
+        self.test_and_score = self.create_widget(OWTestAndScore)
 
     def test_no_data(self):
         """Check that the widget doesn't crash on empty data"""
@@ -57,20 +57,20 @@ class TestOWEqualizedOdds(WidgetTest):
         learner = self.widget.create_learner()
 
         self.send_signal(
-            self.cross_validation.Inputs.train_data,
+            self.test_and_score.Inputs.train_data,
             test_data,
-            widget=self.cross_validation,
+            widget=self.test_and_score,
         )
         self.send_signal(
-            self.cross_validation.Inputs.learner, learner, widget=self.cross_validation
+            self.test_and_score.Inputs.learner, learner, widget=self.test_and_score
         )
-        self.wait_until_finished(self.cross_validation, timeout=10000)
+        self.wait_until_finished(self.test_and_score, timeout=20000)
         predictions = self.get_output(
-            self.cross_validation.Outputs.predictions, widget=self.cross_validation
+            self.test_and_score.Outputs.predictions, widget=self.test_and_score
         )
         results = self.get_output(
-            self.cross_validation.Outputs.evaluations_results,
-            widget=self.cross_validation,
+            self.test_and_score.Outputs.evaluations_results,
+            widget=self.test_and_score,
         )
 
         self.assertIsNotNone(predictions)

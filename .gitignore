@@ -76,4 +76,4 @@ dmypy.json
 
 
 #other
-orange_workflows/
+orange_*_workflows/

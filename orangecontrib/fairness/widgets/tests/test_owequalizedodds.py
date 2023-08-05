@@ -29,7 +29,7 @@ class TestOWEqualizedOdds(WidgetTest):
         """Check that the widget works with the predictions widget"""
         test_data = as_fairness_setup(self)
         self.send_signal(self.widget.Inputs.data, test_data)
-        self.send_signal(self.widget.Inputs.learner, LogisticRegressionLearner())
+        self.send_signal(self.widget.Inputs.input_learner, LogisticRegressionLearner())
         learner = self.widget.create_learner()
         model = learner(test_data)
 
@@ -53,7 +53,7 @@ class TestOWEqualizedOdds(WidgetTest):
         """Check that the widget works with the test and score widget"""
         test_data = as_fairness_setup(self)
         self.send_signal(self.widget.Inputs.data, test_data)
-        self.send_signal(self.widget.Inputs.learner, LogisticRegressionLearner())
+        self.send_signal(self.widget.Inputs.input_learner, LogisticRegressionLearner())
         learner = self.widget.create_learner()
 
         self.send_signal(
@@ -80,7 +80,7 @@ class TestOWEqualizedOdds(WidgetTest):
         """Check that the widget works with the predictions widget"""
         test_data = as_fairness_setup(self)
         self.send_signal(self.widget.Inputs.data, test_data)
-        self.send_signal(self.widget.Inputs.learner, LogisticRegressionLearner())
+        self.send_signal(self.widget.Inputs.input_learner, LogisticRegressionLearner())
         learner = self.widget.create_learner()
         model = learner(test_data)
 

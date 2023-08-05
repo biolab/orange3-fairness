@@ -5,7 +5,6 @@ from Orange.data import Table
 
 from aif360.algorithms.postprocessing import EqOddsPostprocessing
 
-
 from orangecontrib.fairness.widgets.utils import (
     table_to_standard_dataset,
     contains_fairness_attributes,
@@ -14,6 +13,7 @@ from orangecontrib.fairness.widgets.utils import (
 
 
 class PostprocessingModel(Model):
+    """Model created and fitted by the PostprocessingLearner, which is used to predict on new data and to postprocess the predictions"""
     def __init__(self, model, postprocessor, learner):
         super().__init__()
         self.model = model
@@ -22,13 +22,15 @@ class PostprocessingModel(Model):
         self.params = vars()
 
     def predict(self, data):
+        """Function used to preprocess, predict and postprocess on new data"""
         if isinstance(data, Table):
-            # Normalize the data
             data = self.learner.preprocess(data)
             # Get the predictions and scores from the model
             predictions, scores = self.model(data, ret=Model.ValueProbs)
 
-            # For creating the standard dataset we need to know the encoding the table uses for the class variable, the encoding is ordinal and is the same as the order of values in the domain
+            # For creating the standard dataset we need to know the encoding the table uses for the class variable
+            # This can be found in the domain and is the same as the order of values of the class variable in the domain
+            # This is why we need to add it back to the domain if it was removed
             if not data.domain.class_var:
                 data.domain.class_var = self.original_domain.class_var
             standard_dataset, _, _ = table_to_standard_dataset(data)
@@ -40,7 +42,6 @@ class PostprocessingModel(Model):
                 standard_dataset_pred
             )
 
-            # Return the postprocessed predictions and the scores
             return np.squeeze(standard_dataset_pred_transf.labels, axis=1), scores
 
     def predict_storage(self, data):
@@ -54,18 +55,24 @@ class PostprocessingModel(Model):
 
 
 class PostprocessingLearner(Learner):
+    """Learner subclass used to create and fit the model and postprocessor and create the PostprocessingModel"""
     __returns__ = PostprocessingModel
 
     def __init__(self, learner, preprocessors=None, repeatable=None):
         super().__init__(preprocessors=preprocessors)
         self.learner = learner
+        self.callback = None
         self.seed = 42 if repeatable else None
         self.params = vars()
 
     def incompatibility_reason(self, domain):
+        """Function used to check if the domain contains the fairness attributes"""
         if not contains_fairness_attributes(domain):
             return MISSING_FAIRNESS_ATTRIBUTES
 
+    # Fit storage and fit functions were modified to use a Table/Storage object
+    # This is because it's the easiest way to get the domain, and meta attributes
+    # TODO: Should I use the X,Y,W format instead of the table format ? (Same for the model)
     def fit_storage(self, data):
         if isinstance(data, Table):
             self.fit(data)
@@ -79,19 +86,17 @@ class PostprocessingLearner(Learner):
             return self.fit(data)
 
     def fit(self, data):
+        """Function used to preprocess the data, fit the model and the postprocessor"""
         if isinstance(data, Table):
             if not contains_fairness_attributes(data.domain):
                 raise ValueError(MISSING_FAIRNESS_ATTRIBUTES)
-            # Normalize the data
             data = self.preprocess(data)
 
-            # Fit the model
+            # Fit the model to the data
             # TODO: Split the data into train and test data so we can fit the postprocessor on the test data to avoid data leakage
-            # model = self.learner(data, self.callback) <- this is how it should be in order to make the learner call my callback but it doesn't work
-            model = self.learner(data)
-            # Get the predictions from the model
+            model = self.learner(data, self.callback)
+            # Get the predictions from the model, which will be used to fit the postprocessor
             predictions = model(data)
-
 
             # Get the predictions which will be used to fit the postprocessor
             (
@@ -101,7 +106,8 @@ class PostprocessingLearner(Learner):
             ) = table_to_standard_dataset(data)
             standard_dataset_pred = standard_dataset.copy(deepcopy=True)
             standard_dataset_pred.labels = predictions
-            # Fit the postprocessor
+
+            # Create and fit the postprocessor to the predictions
             postprocessor = EqOddsPostprocessing(
                 unprivileged_groups=unprivileged_groups,
                 privileged_groups=privileged_groups,
@@ -113,6 +119,7 @@ class PostprocessingLearner(Learner):
             raise TypeError("Data is not of type Table")
 
     def __call__(self, data, progress_callback=None):
+        self.callback = progress_callback
         self.learner.callback = progress_callback
         model = super().__call__(data)
         model.params = self.params

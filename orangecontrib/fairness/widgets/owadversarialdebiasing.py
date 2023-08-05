@@ -12,14 +12,20 @@ from AnyQt.QtWidgets import QFormLayout, QLabel
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLearner
-from orangecontrib.fairness.widgets.utils import check_fairness_data, check_for_fairness_learner_or_preprocessor
+from orangecontrib.fairness.widgets.utils import (
+    check_fairness_data,
+    check_for_fairness_learner_or_preprocessor,
+)
 
 
 class InterruptException(Exception):
+    """A dummy exception used to interrupt the training process."""
     pass
 
 
 class AdversarialDebiasingRunner:
+    """A class used to run the AdversarialDebiasingLearner in a separate thread and display progress using the callback."""
+
     @staticmethod
     def run(
         learner: AdversarialDebiasingLearner, data: Table, state: TaskState
@@ -29,8 +35,6 @@ class AdversarialDebiasingRunner:
 
         def callback(progress: float, msg: str = None) -> bool:
             state.set_progress_value(progress)
-            # if msg:
-            #     state.set_status(msg)
             if state.is_interruption_requested():
                 raise InterruptException
 
@@ -39,28 +43,35 @@ class AdversarialDebiasingRunner:
 
 
 class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
+    """A widget used to customize and create the AdversarialDebiasing Learner and/or Model"""
+
     name = "Adversarial Debiasing"
     description = "Adversarial Debiasing classification algorithm with or without fairness constraints."
     icon = "icons/adversarial_debiasing.svg"
     priority = 30
 
-    # For inputs and outputs we use the same as in OWBaseLearner superclass
     class Inputs(OWBaseLearner.Inputs):
+        """Inputs for the widgets, which are the same as for the super class (Data, Preprocessor)"""
+
         pass
 
     class Outputs(OWBaseLearner.Outputs):
+        """Outputs for the widgets, which are the same as for the super class (Learner, Model)"""
+
         pass
 
-    # Changing the ignored preprocessors message slightly to fit the new widget
-    # This message is shown when the user specifies custom preprocessors
     class Information(OWBaseLearner.Information):
-        ignored_preprocessors = Msg(            
+        """Information shown to the user when the user specifies custom preprocessors"""
+
+        # This was slightly changed from the original to fit the new widget better
+        ignored_preprocessors = Msg(
             "Ignoring default preprocessing. \n"
             "Default preprocessing (scailing), has been replaced with user-specified "
             "preprocessors. Problems may occur if these are inadequate"
-            "for the given data.")
+            "for the given data."
+        )
 
-    # Here we define the learner we want to use, in this case it is the AdversarialDebiasingLearner
+    # We define the learner we want to use
     LEARNER = AdversarialDebiasingLearner
 
     # We define the list of lambdas for the slider
@@ -91,8 +102,8 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         ConcurrentWidgetMixin.__init__(self)
         OWBaseLearner.__init__(self)
 
-    # We define the UI for the widget
     def add_main_layout(self):
+        """Defines the main UI layout of the widget"""
         form = QFormLayout()
         form.setFieldGrowthPolicy(form.AllNonFixedFieldsGrow)
         form.setLabelAlignment(Qt.AlignLeft)
@@ -170,7 +181,6 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         )
         form.addRow(self.reg_label)
         form.addRow(self.slider)
-        # form.addRow(self.reg_label, self.slider)
         # Checkbox for the replicable training
         form.addRow(
             gui.checkBox(
@@ -187,18 +197,18 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
     # ---------Methods related to UI------------
 
-    # Responsible for the text of the lambda slider
     def set_lambda(self):
+        """Responsible for the text of the adversary loss weight slider"""
         self.strength_D = self.lambdas[self.lambda_index]
-        self.reg_label.setText("Adversary Loss Weight, λ={}:".format(self.strength_D))
+        self.reg_label.setText(f"Adversary Loss Weight, λ={self.strength_D}:")
 
-    # Responsible for getting the lambda value from the index of the slider
     @property
     def selected_lambda(self):
+        """Responsible for getting the lambda value from the index of the slider value"""
         return self.lambdas[self.lambda_index]
-    
-    # Responsible for enabling/disabling the slider
+
     def _debias_changed(self):
+        """Responsible for enabling/disabling the slider"""
         self.slider.setEnabled(self.debias)
         self.apply()
 
@@ -207,20 +217,30 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     @Inputs.data
     @check_fairness_data
     def set_data(self, data):
+        """
+        Function which is called when the user inputs data, it first checks if the
+        data is valid, cancels the current task and then calls the superclass method.
+        """
         self.cancel()
         super().set_data(data)
 
     @Inputs.preprocessor
     @check_for_fairness_learner_or_preprocessor
     def set_preprocessor(self, preprocessor):
+        """
+        Function which is called when the user inputs a preprocessor, it first checks if the
+        preprocessor is valid, cancels the current task and then calls the superclass method.
+        """
         self.cancel()
         super().set_preprocessor(preprocessor)
 
-    #----------Methods related to the learner/model--------------
+    # ----------Methods related to the learner/model--------------
 
-    # Responsible for creating the learner with the parameters we want
-    # It is called in the superclass by the update_learner method
     def create_learner(self):
+        """
+        Responsible for creating the learner with the parameters we want
+        It is called in the superclass by the update_learner method
+        """
         kwargs = {
             "classifier_num_hidden_units": self.hidden_layers_neurons,
             "num_epochs": self.number_of_epochs,
@@ -234,18 +254,15 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
             kwargs["adversary_loss_weight"] = self.selected_lambda
         return self.LEARNER(**kwargs, preprocessors=self.preprocessors)
 
-
-    # This method is called when the input data is changed
-    # it is responsible for fitting the learner and sending the created model to the output
-    # There is also a update_learner method which is called in the apply method of the superclass (along with update_model)
     def update_model(self):
+        """Responsible for starting a new thread, fitting the learner and sending the created model to the output"""
+        # This method is called along with the update_learner method in the apply method of the superclass
+
         self.cancel()
-        # This method will run the run_task method in a separate thread and pass the learner and data as arguments
         if self.data is not None:
             self.start(AdversarialDebiasingRunner.run, self.learner, self.data)
         else:
             self.Outputs.model.send(None)
-
 
     def get_learner_parameters(self):
         parameters = [
@@ -260,8 +277,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
         return parameters
 
-    #-----------Methods related to threading and output-------------
-
+    # -----------Methods related to threading and output-------------
 
     def on_partial_result(self, _):
         pass

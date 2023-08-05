@@ -7,51 +7,58 @@ from Orange.preprocess import preprocess
 
 from aif360.algorithms.preprocessing import Reweighing as ReweighingAlgorithm
 
-from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, check_fairness_data
+from orangecontrib.fairness.widgets.utils import (
+    table_to_standard_dataset,
+    check_fairness_data,
+)
 
 
 class MzCom:
-    # The __init__ method is called when the class is created and can have as many arguments as you want. MzCom(model) creates an instance of the class
-    # The __call__ method is called when the class is called, it must only have one argument, which is the data. MzCom(model)(data) calls the __call__ method of the class
+    """A class used to compute the weights of the rows of a dataset using a allready fitted reweighing algorithm"""
+
     def __init__(self, model, original_domain=None):
         self.original_domain = original_domain
         self.model = model
 
     def __call__(self, data):
-        # For creating a standard dataset we need the "Favorable class values" domain attribute, which may not be present in the data so we need to add it
+        # For creating the standard dataset we need to know the encoding the table uses for the class variable
+        # This can be found in the domain and is the same as the order of values of the class variable in the domain
+        # This is why we need to add it back to the domain if it was removed
         if not data.domain.class_var:
-                data.domain.class_var = self.original_domain.class_var
+            data.domain.class_var = self.original_domain.class_var
         data, _, _ = table_to_standard_dataset(data)
-        # Call the transform method of the model
         data = self.model.transform(data)
-        # Return the weights
         return data.instance_weights
 
     # TODO: Check if this is ok
     InheritEq = True
 
 
-class ReweighingModel():
-    # This class doesn't need an __init__ method because it doesn't need any arguments when it is created
-    # The __call__ method creates an instance of the ReweighingAlgorithm, fits it to the data and returns it
+class ReweighingModel:
+    """A class used to create a ReweighingAlgoritm instance, fitting it to the data and returning it"""
+
     def __call__(self, data):
         (
-            standardDataset,
+            standard_dataset,
             privileged_groups,
             unprivileged_groups,
         ) = table_to_standard_dataset(data)
         reweighing = ReweighingAlgorithm(unprivileged_groups, privileged_groups)
-        reweighing = reweighing.fit(standardDataset)
+        reweighing = reweighing.fit(standard_dataset)
         return reweighing
 
 
 class ReweighingTransform(preprocess.Preprocess):
-    # The __call__ method applies the reweighing algorithm to the data and returns the data with the weights
+    """
+    A class used to add a new column/variable to the data with the weights of the rows of the data computed
+    by the fitted reweighing algorithm stored in the MzCom class instance as a compute_value function
+    """
+
     def __call__(self, data):
-        # Create an instalce of the ReweighingModel, and call the __call__ method with the data as argument
         model = ReweighingModel()(data)
-        # Create a new variable "weights" with the compute_value function, the compute_value function is the MzCom class, which when called calls the transform method of the model
-        weights = ContinuousVariable("weights", compute_value=MzCom(model, original_domain=data.domain))
+        weights = ContinuousVariable(
+            "weights", compute_value=MzCom(model, original_domain=data.domain)
+        )
         # Alternative for the compute_value: compute_value=lambda data, model=model: transf(data, model)
 
         # Add the variable "weights" to the domain of the data
@@ -66,23 +73,30 @@ class ReweighingTransform(preprocess.Preprocess):
 
 
 class OWReweighing(OWWidget):
+    """
+    A class used to create a widget for the reweighing algorithm,
+    which can be used to transform a dataset or as a preprocessor for a model.
+    """
+
     name = "Reweighing"
     description = "Applies the reweighing algorithm to a dataset, which adjusts the weights of rows."
-    icon = 'icons/reweighing.svg'
+    icon = "icons/reweighing.svg"
     priority = 20
 
     want_control_area = False
     resizing_enabled = False
 
-    # Define the inputs and outputs of the widget
     class Inputs:
+        """The inputs of the widget - the dataset"""
+
         data = Input("Data", Table)
 
     class Outputs:
+        """The outputs of the widget - the preprocessed dataset and the preprocessor"""
+
         data = Output("Preprocessed Data", Table)
         preprocessor = Output("Preprocessor", preprocess.Preprocess, dynamic=False)
 
-    # Define the initial state of the widget (constructor)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.preprocessor = ReweighingTransform()
@@ -96,19 +110,21 @@ class OWReweighing(OWWidget):
 
         self._data: Optional[Table] = None
 
-    # Define what should happen when the input data is received
     @Inputs.data
     @check_fairness_data
     def set_data(self, data: Optional[Table]) -> None:
+        """Handling the input data by saving it"""
         if not data:
             return
 
         self._data = data
 
     def handleNewSignals(self):
+        """Handling any new signals by applying the reweighing algorithm to the data"""
         self.apply()
 
     def apply(self):
+        """Fitting the reweighing algorithm to the data and sending the preprocessed data and the preprocessor to the output"""
         if self._data is None:
             return
 

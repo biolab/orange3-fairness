@@ -19,7 +19,7 @@ def as_fairness_setup(self):
     simulate.combobox_activate_item(
         self.as_fairness.controls.protected_attribute, "sex"
     )
-    select_rows(self.as_fairness.controls.privileged_PA_values, [1])
+    select_rows(self.as_fairness.controls.privileged_pa_values, [1])
     output_data = self.get_output(self.as_fairness.Outputs.data)
     return output_data
 

@@ -1,3 +1,5 @@
+import numpy as np
+
 from Orange.base import Learner, Model
 from Orange.data import Table
 from Orange.preprocess import Normalize
@@ -11,12 +13,12 @@ from orangecontrib.fairness.widgets.utils import (
     MISSING_FAIRNESS_ATTRIBUTES,
 )
 
-import numpy as np
-
 
 # This gets called after the model is created and fitted
 # It is stored so we can use it to predict on new data
 class AdversarialDebiasingModel(Model):
+    """Model created and fitted by the AdversarialDebiasingLearner, which is used to predict on new data"""
+
     def __init__(self, model, learner):
         super().__init__()
         self._model = model
@@ -24,16 +26,18 @@ class AdversarialDebiasingModel(Model):
         self.params = vars()
 
     def predict(self, data):
+        """Function used to preprocess and predict on new data"""
         if isinstance(data, Table):
-            # Normalize the data
             data = self.learner.preprocess(data)
-            # For creating the standard dataset we need to know the encoding the table uses for the class variable, the encoding is ordinal and is the same as the order of values in the domain
+            # For creating the standard dataset we need to know the encoding the table uses for the class variable
+            # This can be found in the domain and is the same as the order of values of the class variable in the domain
+            # This is why we need to add it back to the domain if it was removed
             if not data.domain.class_var:
                 data.domain.class_var = self.original_domain.class_var
             standard_dataset, _, _ = table_to_standard_dataset(data)
             predictions = self._model.predict(standard_dataset)
 
-            # Create a array of scores with a column for each class the first column is the predictions.scores and the second column is 1 - predictions.scores
+            # Array of scores with a column of scores for each class
             scores = np.hstack(
                 (predictions.scores, (1 - predictions.scores).reshape(-1, 1))
             )
@@ -53,11 +57,11 @@ class AdversarialDebiasingModel(Model):
 
 
 class AdversarialDebiasingLearner(Learner):
+    """Learner subclass used to create and fit the AdversarialDebiasingModel"""
+
     __returns__ = AdversarialDebiasingModel
     # List of preprocessors, these get applied when the __call__ function is called
-    preprocessors = [
-        Normalize()
-    ]
+    preprocessors = [Normalize()]
     callback = None
 
     def __init__(self, preprocessors=None, **kwargs):
@@ -66,22 +70,16 @@ class AdversarialDebiasingLearner(Learner):
 
     def _calculate_total_runs(self, data):
         """Function used to calculate the total number of runs the learner will perform on the data"""
-        
-        # Retrieve the number of epochs and batch size directly from params
-        num_epochs = self.params["kwargs"]['num_epochs']
-        batch_size = self.params["kwargs"]['batch_size']
+        # This is need to calculate and display the progress of the training
+        num_epochs = self.params["kwargs"]["num_epochs"]
+        batch_size = self.params["kwargs"]["batch_size"]
         num_instances = len(data)
-
-        # Compute the total number of batches
         num_batches = np.ceil(num_instances / batch_size)
-
-        # Total number of runs is the product of the number of epochs and the number of batches
         total_runs = num_epochs * num_batches
-
         return total_runs
 
-
     def incompatibility_reason(self, domain):
+        """Function used to check if the domain is compatible with the learner (contains fairness attributes)"""
         if not contains_fairness_attributes(domain):
             return MISSING_FAIRNESS_ATTRIBUTES
 
@@ -94,20 +92,25 @@ class AdversarialDebiasingLearner(Learner):
         else:
             return self.fit(data)
 
-    # Function responsible for fitting the learner to the data and creating a model
-    # TODO: Should I use the X,Y,W format instead of the table format ?
+    # Fit storage and fit functions were modified to use a Table/Storage object
+    # This is because it's the easiest way to get the domain, and meta attributes
+    # TODO: Should I use the X,Y,W format instead of the table format ? (Same for the model)
     def fit(self, data: Table) -> AdversarialDebiasingModel:
-        standardDataset, privileged_groups, unprivileged_groups = table_to_standard_dataset(data)
-        # Create a new session and reset the default graph
-        # Eager execution mea
+        (
+            standard_dataset,
+            privileged_groups,
+            unprivileged_groups,
+        ) = table_to_standard_dataset(data)
+
         tf.disable_eager_execution()
         tf.reset_default_graph()
         if tf.get_default_session() is not None:
             tf.get_default_session().close()
-        sess = CallbackSession(callback=self.callback, total_runs=self._calculate_total_runs(data))
+        sess = CallbackSession(
+            callback=self.callback, total_runs=self._calculate_total_runs(data)
+        )
 
         # Create a model using the parameters from the widget and fit it to the data
-        # **self.params["kwargs"] unpacks the dictionary self.params["kwargs"] into keyword arguments
         model = AdversarialDebiasing(
             **self.params["kwargs"],
             unprivileged_groups=unprivileged_groups,
@@ -116,48 +119,45 @@ class AdversarialDebiasingLearner(Learner):
             scope_name="adversarial_debiasing"
         )
         sess.enable_callback()
-        model = model.fit(standardDataset)
+        model = model.fit(standard_dataset)
         sess.disable_callback()
         return AdversarialDebiasingModel(model=model, learner=self)
 
-    # This is called when using the learner as a function, in the superclass it uses the _fit_model function
-    # Which creates a new model by calling the fit function
     def __call__(self, data, progress_callback=None):
+        """Call method for AdversarialDebiasingLearner, in the superclass it calls the _fit_model function (and other things)"""
         self.callback = progress_callback
         model = super().__call__(data, progress_callback)
         model.params = self.params
         return model
-    
 
 
-
-# Here I make a subclass of the tensorflow session (sess) and override the run function so it calls the callback function
-# This allows me to calculate and display the progress of the training
-# To calculate the progress using these ways we need to know the number of expected calls to the callback function and count how many times it has been called
 class CallbackSession(tf.Session):
-    def __init__(self, target='', graph=None, config=None, callback=None, total_runs=0):
+    """Subclass of tensorflow session with callback functionality for progress tracking and displaying"""
+
+    def __init__(self, target="", graph=None, config=None, callback=None, total_runs=0):
         super().__init__(target=target, graph=graph, config=config)
         self.callback = callback
         self.run_count = 0
+        self.callback_enabled = False
         self.total_runs = total_runs
 
     def run(self, fetches, feed_dict=None, options=None, run_metadata=None):
+        """A overridden run function which calls the callback function and calculates the progress"""
+        # To calculate the progress using these ways we need to know the number of expected
+        # calls to the callback function and count how many times it has been called
         self.run_count += 1
         progress = (self.run_count / self.total_runs) * 100
         if self.callback_enabled and self.callback:
             self.callback(progress)
 
-        return super().run(fetches, feed_dict=feed_dict, options=options, run_metadata=run_metadata)
-    
-    # These two functions are needed so the callback can be enabled for the fit fase and disabled for the predict fase
+        return super().run(
+            fetches, feed_dict=feed_dict, options=options, run_metadata=run_metadata
+        )
+
     def enable_callback(self):
+        """Enable callback method for the model fitting fase"""
         self.callback_enabled = True
 
     def disable_callback(self):
+        """Disable callback method for the model prediction fase"""
         self.callback_enabled = False
-
-
-
-
-
-

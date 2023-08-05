@@ -10,6 +10,10 @@ from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, chec
 
 
 class OWDatasetBias(OWWidget):
+    """
+    Widget for computing the fairness metrics (bias) of a dataset.
+    More specifically, it computes the disparate impact and statistical parity difference metrics for the dataset.
+    """
     name = "Dataset Bias"
     description = "Computes the bias of a dataset. More specifically, it computes the disparate impact and statistical parity difference metrics for the dataset."
     icon = "icons/dataset_bias.svg"
@@ -19,6 +23,7 @@ class OWDatasetBias(OWWidget):
     resizing_enabled = False
 
     class Inputs:
+        """Input for the widget - dataset."""
         data = Input("Data", Table)
 
     def __init__(self, *args, **kwargs):
@@ -31,6 +36,7 @@ class OWDatasetBias(OWWidget):
     @Inputs.data
     @check_fairness_data
     def set_data(self, data: Optional[Table]) -> None:
+        """Computes the bias of the dataset and displays it on the widget."""
         if (
             not data
         ):

@@ -15,9 +15,11 @@ from orangecontrib.fairness.widgets.utils import check_fairness_data, check_for_
 
 
 class InterruptException(Exception):
+    """A dummy exception used to interrupt the training process."""
     pass
 
 class EqualizedOddsRunner:
+    """A class used to run the EqualizedOddsLearner in a separate thread and display progress using the callback."""
     @staticmethod
     def run(
         learner: Learner, data: Table, state: TaskState
@@ -38,6 +40,9 @@ class EqualizedOddsRunner:
 
 
 class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
+    """
+    Widget for postprocessing a model predictions using a fairness algorithm to satisfy equalized odds.
+    """
     name = "Equalized Odds Postprocessing"
     description = "Postprocessing fairness algorithm which changes the predictions of a classifier to satisfy equalized odds."
     icon = "icons/eq_odds_postprocessing.svg"
@@ -47,14 +52,16 @@ class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
     repeatable = Setting(True)
 
     class Inputs(OWBaseLearner.Inputs):
-        learner = Input("Learner", Learner)
+        """Inputs for the widget, which are the same as the inputs for the super class plus a learner input."""
+        input_learner = Input("Learner", Learner)
 
     def __init__(self):
-        self.normal_learner: Learner = None
+        self.input_learner: Learner = None
         ConcurrentWidgetMixin.__init__(self)
         OWBaseLearner.__init__(self)
 
     def add_main_layout(self):
+        """Adds the main layout of the widget which is just a checkbox for replicable training."""
         form = QFormLayout()
         form.setFieldGrowthPolicy(form.AllNonFixedFieldsGrow)
         form.setLabelAlignment(Qt.AlignLeft)
@@ -73,44 +80,60 @@ class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
     @Inputs.data
     @check_fairness_data
     def set_data(self, data: Table):
+        """
+        Function which is called when the user inputs data, it first checks if the
+        data is valid, cancels the current task and then calls the superclass method.
+        """
         self.cancel()
         super().set_data(data)
 
 
-    @Inputs.learner
+    @Inputs.input_learner
     @check_for_fairness_learner_or_preprocessor
-    def set_learner(self, learner: Learner):
+    def set_learner(self, input_learner: Learner):
+        """
+        Function which handles the learner input by first canceling the current taks, 
+        storing the learneras a class variable and updating the widget name.
+        """
         self.cancel()
-        self.normal_learner = learner
-        if learner is not None:
-            self.learner_name = f"Equalized Odds: {learner.name}"
+        self.input_learner = input_learner
+        if input_learner is not None:
+            self.learner_name = f"Equalized Odds: {input_learner.name}"
 
     @Inputs.preprocessor
     @check_for_fairness_learner_or_preprocessor
     def set_preprocessor(self, preprocessor):
+        """
+        Function which is called when the user inputs a preprocessor, it first checks if the
+        preprocessor is valid, cancels the current task and then calls the superclass method.
+        """
         self.cancel()
         super().set_preprocessor(preprocessor)
 
 
     def create_learner(self):
-        if not self.normal_learner:
+        """
+        Responsible for creating the postprocessed learner with the input_learner and the preprocessors.
+        """
+        if not self.input_learner:
             return None
         return self.LEARNER(
-            self.normal_learner,
+            self.input_learner,
             preprocessors=self.preprocessors,
             repeatable=self.repeatable,
         )
-    
+
     def handleNewSignals(self):
-        if not self.normal_learner:
+        if not self.input_learner:
             return
         self.update_learner() 
         if self.data is not None:
             self.update_model()
 
     def update_model(self):
+        """Responsible for starting a new thread, fitting the learner and sending the created model to the output"""
         self.cancel()
-        if self.data is not None and self.normal_learner is not None:
+        if self.data is not None and self.input_learner is not None:
             self.start(EqualizedOddsRunner.run, self.learner, self.data)
         else:
             self.Outputs.model.send(None)

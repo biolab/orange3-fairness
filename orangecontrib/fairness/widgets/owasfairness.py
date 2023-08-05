@@ -13,7 +13,10 @@ from orangecontrib.fairness.widgets.utils import check_for_missing_rows, check_d
 
 
 class OWAsFairness(OWWidget):
-    # Define the name and other details of the widget
+    """
+    Converts a dataset to a fairness dataset with marked favorable class values, 
+    protected attributes and priviliged protected attribute values.
+    """
     name = "As Fairness Data"
     description = "Converts a dataset to a fairness dataset with marked favorable class values, protected attributes and priviliged protected attribute values."
     icon = 'icons/as_fairness.svg'
@@ -22,36 +25,36 @@ class OWAsFairness(OWWidget):
     want_main_area = False
     resizing_enabled = False
 
-    # Define inputs and outputs
     class Inputs:
+        """Define the inputs to the widgets"""
         data = Input("Data", Table)
 
     class Outputs:
+        """Define the outputs to the widgets"""
         data = Output("Data", Table)
 
-    # Settings: The favorable_class, protected_attribute, and privileged_values are instance variables that are declared as ContextSetting. A ContextSetting is a special type of Setting that Orange remembers for each different context (i.e., input data domain).
+    # Settings: The favorable_class, protected_attribute, and privileged_values are instance variables that are declared as ContextSetting.
+    # A ContextSetting is a special type of Setting that Orange remembers for each different context (i.e., input data domain).
     settingsHandler = DomainContextHandler(
         match_values=DomainContextHandler.MATCH_VALUES_ALL
     )
     protected_attribute = ContextSetting(None)
     favorable_class_value = ContextSetting("")
-    privileged_PA_values = ContextSetting([])
+    privileged_pa_values = ContextSetting([])
     auto_commit: bool = Setting(
         True, schema_only=True
     )  # schema_only -> The setting is saved within the workflow but the default never changes.
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self._data: Optional[Table] = None
-
         favorable_class_items_model = PyListModel(
             iterable=[]
         )  # Here we don't want to display the different attributes/features but the values of the attribute so I couldn't use the DomainModel which stores the features, so I used the PyListModel which can store any type in an iterable
         protected_attribute_model = DomainModel(
             valid_types=(DiscreteVariable,)
         )  # DomainModel stores the domain of the input data and allows us to select a attribute from it. It is tied to the gui.comboBox widget. And Can be accesed by self.controls.protected_attribute.model()
-        privileged_PA_values_model = PyListModel(iterable=[])
+        privileged_pa_values_model = PyListModel(iterable=[])
 
         # Create a box for each of the three variables and populate them with comboboxes and listboxes.
         box = gui.vBox(self.controlArea, "Favorable Class Value", margin=0)
@@ -80,8 +83,8 @@ class OWAsFairness(OWWidget):
         var_list = gui.listView(
             box,
             self,
-            "privileged_PA_values",
-            model=privileged_PA_values_model,
+            "privileged_pa_values",
+            model=privileged_pa_values_model,
             callback=self.commit.deferred,
         )
         var_list.setSelectionMode(var_list.ExtendedSelection)
@@ -95,12 +98,16 @@ class OWAsFairness(OWWidget):
     @check_for_missing_rows
     @check_data_structure
     def set_data(self, data: Table) -> None:
+        """
+        Function called when new data is received on the input. It is responsible for filling 
+        the widget comboboxes and listboxes with the values contained in the input data.
+        """
         self.closeContext()
         self._data = None
         domain: Optional[Domain] = None
 
         if data is not None:
-            # First impute the data, by removing all rows with missing values
+            # Remove all rows with missing values from the data, because the fairness algorithms can't handle missing values.
             data = RemoveNaNRows()(data)
 
             # Create a table with the same data but a different domain
@@ -122,12 +129,12 @@ class OWAsFairness(OWWidget):
             for value in data.domain.class_vars[0].values:
                 self.controls.favorable_class_value.model().append(value)
 
-            # Clear the old values of the privileged_PA_values_model PyListModel
-            if self.controls.privileged_PA_values.model():
-                self.controls.privileged_PA_values.model().clear()
-            # Fill the privileged_PA_values_model PyListModel with the values of the protected attribute variable of the input data.
+            # Clear the old values of the privileged_pa_values_model PyListModel
+            if self.controls.privileged_pa_values.model():
+                self.controls.privileged_pa_values.model().clear()
+            # Fill the privileged_pa_values_model PyListModel with the values of the protected attribute variable of the input data.
             for value in self.controls.protected_attribute.model()[0].values:
-                self.controls.privileged_PA_values.model().append(value)
+                self.controls.privileged_pa_values.model().append(value)
 
             # Set the selected variables to the first variable in the list of variables (in the comboboxes or listboxes)
             self.protected_attribute = (
@@ -140,9 +147,9 @@ class OWAsFairness(OWWidget):
                 if len(self.controls.favorable_class_value.model())
                 else None
             )
-            self.privileged_PA_values = (
-                [self.controls.privileged_PA_values.model()[0]]
-                if len(self.controls.privileged_PA_values.model())
+            self.privileged_pa_values = (
+                [self.controls.privileged_pa_values.model()[0]]
+                if len(self.controls.privileged_pa_values.model())
                 else []
             )
 
@@ -152,52 +159,62 @@ class OWAsFairness(OWWidget):
             if (
                 self.protected_attribute is not None
                 and self.favorable_class_value is not None
-                and len(self.controls.privileged_PA_values.model()) > 0
+                and len(self.controls.privileged_pa_values.model()) > 0
             ):
                 self.openContext(domain)
 
         # Apply the changes and send the data to the output
-        self.commit.now()  # In the set_data we always have a commit.now() instead of a commit.deferred() because we want to apply the changes as soon as the input data changes.
+        # Here we have commit.now() instead of a commit.deferred() because we want to apply the changes as soon as the input data changes.
+        self.commit.now()
 
     def openContext(self, *a):
+        """
+        Call the openContext function of the parent class and then check if the protected
+        attribute variable or the privileged_pa_values_model PyListModel need to be changed.
+        """
         super().openContext(*a)
-    
-        # Check if the privileged_PA_values match the values of the protected attribute variable
+
+        # Check if the privileged_pa_values match the values of the protected attribute variable
         # This is needed because when loading a old workflow, the domain sometimes doesn't change the protected_attribute
-        if not set(self.privileged_PA_values).issubset(set(self.protected_attribute.values)):
-            self.change_values(clear_PA_values=True)
-        # Check if the self.controls.privileged_PA_values.model matches the values of the protected attribute variable
+        if not set(self.privileged_pa_values).issubset(set(self.protected_attribute.values)):
+            self.change_values(clear_pa_values=True)
+        # Check if the self.controls.privileged_pa_values.model matches the values of the protected attribute variable
         # This is needed when loading an old workflow the displayed values might not match the values of the protected attribute variable
-        elif not set(self.controls.privileged_PA_values.model()).issubset(
+        elif not set(self.controls.privileged_pa_values.model()).issubset(
             set(self.protected_attribute.values)
         ):
-            self.change_values(clear_PA_values=False)
+            self.change_values(clear_pa_values=False)
 
 
+    def change_values(self, clear_pa_values=True) -> None:
+        """
+        This function is normally called when the user changes the protected attribute variable
+        It changes the values of the privileged_pa_values_model PyListModel (the list of displayed privileged PA values) 
+        and the selected privileged PA values (self.privileged_pa_values) to match the values of the new protected attribute variable.
+        """
 
-    # This function is normally called when the user changes the protected attribute variable
-    # It changes the values of the privileged_PA_values_model PyListModel (the list of displayed privileged PA values) and the selected privileged PA values (self.privileged_PA_values)
-    def change_values(self, clear_PA_values=True) -> None:
         # Change the list of displayed privileged PA values
-        self.controls.privileged_PA_values.model().clear()
+        self.controls.privileged_pa_values.model().clear()
         # Fill the list with the values of the new protected attribute variable
         for value in self.protected_attribute.values:
-            self.controls.privileged_PA_values.model().append(value)
+            self.controls.privileged_pa_values.model().append(value)
 
-        # Change the selected privileged PA values            
-        if clear_PA_values:
-            self.privileged_PA_values = (
-                [self.controls.privileged_PA_values.model()[0]]
-                if len(self.controls.privileged_PA_values.model())
+        # Change the selected privileged PA values
+        if clear_pa_values:
+            self.privileged_pa_values = (
+                [self.controls.privileged_pa_values.model()[0]]
+                if len(self.controls.privileged_pa_values.model())
                 else []
             )
 
+
     # Adding the protected attribute and favorable class value as attributes to the data domain
     def as_fairness_data(self, data: Table) -> Optional[Table]:
+        """This function adds the protected attribute and favorable class value as attributes to the data domain"""
         if (
             not self.protected_attribute
             or not self.favorable_class_value
-            or not self.privileged_PA_values
+            or not self.privileged_pa_values
             or not data
         ):
             return None
@@ -207,10 +224,10 @@ class OWAsFairness(OWWidget):
         # Create the new attribute or copy the old ones
         new_attributes = []
         for attribute in old_domain.attributes:
-            # If the attribute is the protected attribute, then create a new attribute with the same values but add the privileged_PA_values attribute
+            # If the attribute is the protected attribute, then create a new attribute with the same values but add the privileged_pa_values attribute
             if attribute.name == self.protected_attribute.name:
                 new_attr = attribute.copy()
-                new_attr.attributes["privileged_PA_values"] = self.privileged_PA_values
+                new_attr.attributes["privileged_pa_values"] = self.privileged_pa_values
             # Else just copy the attribute
             else:
                 new_attr = attribute
@@ -226,10 +243,12 @@ class OWAsFairness(OWWidget):
         new_data = data.transform(new_domain)
         return new_data
 
-    # This function is called when the user changes the value of the comboboxes or listboxes
-    # It changes the data attributes and outputs the data
     @gui.deferred  # The defered allows us to only call the function once the user has stopped changing the values of the comboboxes or listboxes and "Applies" the changes
     def commit(self) -> None:
+        """
+        This function is called when the user changes the value of the comboboxes or listboxes.
+        It changes the data attributes and outputs the data
+        """
         data = None
         if self._data is not None:
             data = self.as_fairness_data(self._data)

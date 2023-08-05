@@ -29,7 +29,7 @@ class TestOWAsFairness(WidgetTest):
         self.assertTrue(self.widget.controls.protected_attribute.count() > 0)
         self.assertTrue(self.widget.controls.favorable_class_value.count() > 0)
         self.assertTrue(
-            self.widget.controls.privileged_PA_values.model().rowCount() > 0
+            self.widget.controls.privileged_pa_values.model().rowCount() > 0
         )
 
     def test_selection(self):
@@ -48,8 +48,8 @@ class TestOWAsFairness(WidgetTest):
         simulate.combobox_activate_item(self.widget.controls.protected_attribute, "sex")
         self.assertEqual(self.widget.protected_attribute.name, "sex")
 
-        select_rows(self.widget.controls.privileged_PA_values, [1])
-        self.assertEqual(self.widget.privileged_PA_values, ["Male"])
+        select_rows(self.widget.controls.privileged_pa_values, [1])
+        self.assertEqual(self.widget.privileged_pa_values, ["Male"])
 
     def test_output(self):
         """Check that the selection is properly set"""
@@ -63,17 +63,17 @@ class TestOWAsFairness(WidgetTest):
             self.widget.controls.favorable_class_value, ">50K"
         )
         simulate.combobox_activate_item(self.widget.controls.protected_attribute, "sex")
-        select_rows(self.widget.controls.privileged_PA_values, [1])
+        select_rows(self.widget.controls.privileged_pa_values, [1])
 
         output_data = self.get_output(self.widget.Outputs.data)
 
         self.assertTrue(output_data is not None)
         self.assertTrue("favorable_class_value" in output_data.domain.class_var.attributes)
-        contains_PA_values = False
+        contains_pa_values = False
         for attr in output_data.domain.attributes:
-            if "privileged_PA_values" in attr.attributes:
-                        contains_PA_values = True
-        self.assertTrue(contains_PA_values)
+            if "privileged_pa_values" in attr.attributes:
+                        contains_pa_values = True
+        self.assertTrue(contains_pa_values)
 
 
 if __name__ == "__main__":

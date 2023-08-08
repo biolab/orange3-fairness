@@ -10,7 +10,7 @@ except FileNotFoundError:
 
 setup(
     name="Orange3-Fairness",
-    version="0.1.0",
+    version="0.1.1",
     author="Bioinformatics Laboratory, FRI UL",
     author_email="contact@orange.biolab.si",
     maintainer="Zan Mervic",

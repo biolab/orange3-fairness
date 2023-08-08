@@ -266,6 +266,10 @@ def table_to_standard_dataset(data) -> None:
         _add_dummy_class_column(data, df)
 
 
+    if df[data.domain.class_var.name].isnull().any():
+        _add_dummy_class_column(data, df)
+
+
     # Map the protected_attribute privileged values to 1 and the unprivileged values to 0
     # This is so AdversarialDebiasing can work when the protected attribute has more than two unique values
     # It does not affect the performance of any other algorithm

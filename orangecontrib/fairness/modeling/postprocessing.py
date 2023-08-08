@@ -14,25 +14,18 @@ from orangecontrib.fairness.widgets.utils import (
 
 class PostprocessingModel(Model):
     """Model created and fitted by the PostprocessingLearner, which is used to predict on new data and to postprocess the predictions"""
-    def __init__(self, model, postprocessor, learner):
+    def __init__(self, model, postprocessor):
         super().__init__()
         self.model = model
         self.postprocessor = postprocessor
-        self.learner = learner
         self.params = vars()
 
     def predict(self, data):
         """Function used to preprocess, predict and postprocess on new data"""
         if isinstance(data, Table):
-            data = self.learner.preprocess(data)
             # Get the predictions and scores from the model
             predictions, scores = self.model(data, ret=Model.ValueProbs)
 
-            # For creating the standard dataset we need to know the encoding the table uses for the class variable
-            # This can be found in the domain and is the same as the order of values of the class variable in the domain
-            # This is why we need to add it back to the domain if it was removed
-            if not data.domain.class_var:
-                data.domain.class_var = self.original_domain.class_var
             standard_dataset, _, _ = table_to_standard_dataset(data)
             standard_dataset_pred = standard_dataset.copy(deepcopy=True)
             standard_dataset_pred.labels = predictions.reshape(-1, 1)
@@ -51,7 +44,7 @@ class PostprocessingModel(Model):
             raise TypeError("Data is not of type Table")
 
     def __call__(self, data, ret=Model.Value):
-        return self.predict_storage(data)
+        return super().__call__(data, ret)
 
 
 class PostprocessingLearner(Learner):
@@ -114,7 +107,7 @@ class PostprocessingLearner(Learner):
                 seed=self.seed,
             )
             postprocessor.fit(standard_dataset, standard_dataset_pred)
-            return PostprocessingModel(model, postprocessor, self)
+            return PostprocessingModel(model, postprocessor)
         else:
             raise TypeError("Data is not of type Table")
 

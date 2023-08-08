@@ -1,5 +1,3 @@
-import warnings
-
 from numpy import unique
 from abc import abstractmethod
 from Orange.data import DiscreteVariable, ContinuousVariable, Domain
@@ -101,8 +99,5 @@ class DisparateImpact(FairnessScorer):
     # This can lead to division by zero in the Disparate Impact score (and untrue results for the other scores)
     # What is the best way to handle this?
     def metric(self, classification_metric):
-        try:
-            return classification_metric.disparate_impact()
-        except Warning as _:
-            return 0
+        return classification_metric.disparate_impact()
             

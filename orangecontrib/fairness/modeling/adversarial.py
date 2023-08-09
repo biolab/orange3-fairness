@@ -114,7 +114,6 @@ class AdversarialDebiasingLearner(Learner):
         )
         sess.enable_callback()
         model = model.fit(standard_dataset)
-        print(f"Weights training: {standard_dataset.instance_weights}")
         sess.disable_callback()
         return AdversarialDebiasingModel(model=model)
 

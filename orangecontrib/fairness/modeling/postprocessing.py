@@ -83,7 +83,6 @@ class PostprocessingLearner(Learner):
         if isinstance(data, Table):
             if not contains_fairness_attributes(data.domain):
                 raise ValueError(MISSING_FAIRNESS_ATTRIBUTES)
-            data = self.preprocess(data)
 
             # Fit the model to the data
             # TODO: Split the data into train and test data so we can fit the postprocessor on the test data to avoid data leakage

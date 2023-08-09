@@ -14,7 +14,8 @@ from AnyQt.QtCore import Qt
 from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLearner
 from orangecontrib.fairness.widgets.utils import (
     check_fairness_data,
-    check_for_fairness_learner_or_preprocessor,
+    check_for_reweighing_preprocessor,
+    check_for_reweighted_data
 )
 
 
@@ -216,6 +217,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
     @Inputs.data
     @check_fairness_data
+    @check_for_reweighted_data
     def set_data(self, data):
         """
         Function which is called when the user inputs data, it first checks if the
@@ -225,7 +227,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         super().set_data(data)
 
     @Inputs.preprocessor
-    @check_for_fairness_learner_or_preprocessor
+    @check_for_reweighing_preprocessor
     def set_preprocessor(self, preprocessor):
         """
         Function which is called when the user inputs a preprocessor, it first checks if the

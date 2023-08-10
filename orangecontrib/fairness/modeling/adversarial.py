@@ -19,21 +19,14 @@ from orangecontrib.fairness.widgets.utils import (
 class AdversarialDebiasingModel(Model):
     """Model created and fitted by the AdversarialDebiasingLearner, which is used to predict on new data"""
 
-    def __init__(self, model, learner):
+    def __init__(self, model):
         super().__init__()
         self._model = model
-        self.learner = learner
         self.params = vars()
 
     def predict(self, data):
-        """Function used to preprocess and predict on new data"""
+        """Function used to predict on new data"""
         if isinstance(data, Table):
-            data = self.learner.preprocess(data)
-            # For creating the standard dataset we need to know the encoding the table uses for the class variable
-            # This can be found in the domain and is the same as the order of values of the class variable in the domain
-            # This is why we need to add it back to the domain if it was removed
-            if not data.domain.class_var:
-                data.domain.class_var = self.original_domain.class_var
             standard_dataset, _, _ = table_to_standard_dataset(data)
             predictions = self._model.predict(standard_dataset)
 
@@ -42,7 +35,8 @@ class AdversarialDebiasingModel(Model):
                 (predictions.scores, (1 - predictions.scores).reshape(-1, 1))
             )
 
-            return np.squeeze(predictions.labels, axis=1), scores
+            temp = np.squeeze(predictions.labels, axis=1), scores
+            return temp
         else:
             raise TypeError("Data is not of type Table")
 
@@ -53,7 +47,7 @@ class AdversarialDebiasingModel(Model):
             raise TypeError("Data is not of type Table")
 
     def __call__(self, data, ret=Model.Value):
-        return self.predict_storage(data)
+        return super().__call__(data, ret)
 
 
 class AdversarialDebiasingLearner(Learner):
@@ -121,7 +115,7 @@ class AdversarialDebiasingLearner(Learner):
         sess.enable_callback()
         model = model.fit(standard_dataset)
         sess.disable_callback()
-        return AdversarialDebiasingModel(model=model, learner=self)
+        return AdversarialDebiasingModel(model=model)
 
     def __call__(self, data, progress_callback=None):
         """Call method for AdversarialDebiasingLearner, in the superclass it calls the _fit_model function (and other things)"""

@@ -11,7 +11,7 @@ from AnyQt.QtWidgets import QFormLayout
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.postprocessing import PostprocessingLearner
-from orangecontrib.fairness.widgets.utils import check_fairness_data, check_for_fairness_learner_or_preprocessor
+from orangecontrib.fairness.widgets.utils import check_fairness_data
 
 
 class InterruptException(Exception):
@@ -89,7 +89,6 @@ class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
 
 
     @Inputs.input_learner
-    @check_for_fairness_learner_or_preprocessor
     def set_learner(self, input_learner: Learner):
         """
         Function which handles the learner input by first canceling the current taks, 
@@ -101,7 +100,6 @@ class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
             self.learner_name = f"Equalized Odds: {input_learner.name}"
 
     @Inputs.preprocessor
-    @check_for_fairness_learner_or_preprocessor
     def set_preprocessor(self, preprocessor):
         """
         Function which is called when the user inputs a preprocessor, it first checks if the

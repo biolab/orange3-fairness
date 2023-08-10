@@ -1,3 +1,4 @@
+from numpy import unique
 from abc import abstractmethod
 from Orange.data import DiscreteVariable, ContinuousVariable, Domain
 from Orange.evaluation.scoring import Score
@@ -33,6 +34,7 @@ class FairnessScorer(Score, abstract=True):
 
     def compute_score(self, results):
         """Method that creates a ClassificationMetric object used to compute fairness scores"""
+
         dataset, privileged_groups, unprivileged_groups = table_to_standard_dataset(
             results.data
         )
@@ -93,5 +95,9 @@ class DisparateImpact(FairnessScorer):
     name = "DI"
     long_name = "Disparate Impact"
 
+    # TODO: When using randomize, models sometimes predict the same class for all instances
+    # This can lead to division by zero in the Disparate Impact score (and untrue results for the other scores)
+    # What is the best way to handle this?
     def metric(self, classification_metric):
         return classification_metric.disparate_impact()
+            

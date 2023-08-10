@@ -30,21 +30,19 @@ NO_CATEGORICAL_ATTRIBUTES: str = (
 )
 
 REWEIGHING_PREPROCESSOR: str = (
-    "The reweighing preprocessor currently can not be used as a preprocessor for this widget. \n"
-    "You can instead use it to preprocess the data which you can use as input for this widget. "
+    "This widget is not compatible with the reweighing preprocessor\n"
+    "The custom preprocessing is therefore being ignored."
 )
 
-ADVERSARIAL_LEARNER: str = (
-    "The adversarial learner currently can not be used as a learner for this widget. "
+REWEIGHTED_DATA: str = (
+    "This widget is not compatible with data which was preprocessed by a reweighing preprocessor."
 )
 
 
 #TODO: Make the fairness widgets compatible with eachother.
-def check_for_fairness_learner_or_preprocessor(f):
-    """A function which checks if the input to a widget is a fairness preprocessor or learner."""
-
+def check_for_reweighing_preprocessor(f):
+    """A function which checks if the input to a widget is a reweighing preprocessor."""
     from orangecontrib.fairness.widgets.owreweighing import ReweighingTransform
-    from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLearner
 
     @wraps(f)
     def wrapper(widget, input, *args, **kwargs):
@@ -53,12 +51,6 @@ def check_for_fairness_learner_or_preprocessor(f):
             "reweighing_preprocessor", UnboundMsg(REWEIGHING_PREPROCESSOR)
         )
         widget.Error.reweighing_preprocessor.clear()
-
-        # Add the adversarial learner error message
-        widget.Error.add_message(
-            "adversarial_learner", UnboundMsg(ADVERSARIAL_LEARNER)
-        )
-        widget.Error.adversarial_learner.clear()
 
         if isinstance(input, ReweighingTransform):
             widget.Error.reweighing_preprocessor()
@@ -70,14 +62,38 @@ def check_for_fairness_learner_or_preprocessor(f):
             widget.Error.reweighing_preprocessor()
             input = None
 
-        elif isinstance(input, AdversarialDebiasingLearner):
-            widget.Error.adversarial_learner()
-            input = None
+        elif isinstance(input, Table):
+            for variable in input.domain.metas:
+                if variable.name == "weights":
+                    widget.Error.reweighing_preprocessor()
+                    input = None
+                    break
 
         return f(widget, input, *args, **kwargs)
 
     return wrapper
 
+def check_for_reweighted_data(f):
+    """A function which checks if the input data war reweighted by a reweighing preprocessor."""
+
+    @wraps(f)
+    def wrapper(widget, input, *args, **kwargs):
+        # Add the preprocessor error message
+        widget.Error.add_message(
+            "reweighinghted_data", UnboundMsg(REWEIGHTED_DATA)
+        )
+        widget.Error.reweighinghted_data.clear()
+
+        if isinstance(input, Table):
+            for variable in input.domain.metas:
+                if variable.name == "weights":
+                    widget.Error.reweighinghted_data()
+                    input = None
+                    break
+
+        return f(widget, input, *args, **kwargs)
+
+    return wrapper
 
 
 def contains_fairness_attributes(domain: Domain) -> bool:
@@ -263,6 +279,10 @@ def table_to_standard_dataset(data) -> None:
     # The dummy values need to contain all the possible values of the class variable (in its index representation)
     # This is because the aif360 StandardDataset requires the class variable to be present in the dataframe with all the possible values
     if data.domain.class_var.name not in df.columns:
+        _add_dummy_class_column(data, df)
+
+
+    if df[data.domain.class_var.name].isnull().any():
         _add_dummy_class_column(data, df)
 
 

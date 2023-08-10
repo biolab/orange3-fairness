@@ -1,5 +1,7 @@
 Orange3 Fairness
 ================
 
-Orange3 Fairness is an add-on for the [Orange3](http://orange.biolab.si)
-data mining suite. It provides extensions for fariness-aware AI.
+Orange3 Fairness is an add-on for the [Orange3](http://orange.biolab.si) data mining suite. It provides extensions for fairness-aware AI.
+
+.. image:: https://raw.githubusercontent.com/ZanMervic/orange3-fairness/main/doc/readme-screenshot.png
+   :alt: Screenshot of Orange3 Fairness add-on

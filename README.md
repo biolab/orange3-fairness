@@ -4,7 +4,8 @@
 <p align="center">
 <a href="https://github.com/ZanMervic//orange3-fairness/actions"><img alt="Actions Status" src="https://github.com/ZanMervic/orange3-fairness/actions/workflows/test.yml/badge.svg"></a>
 <a href="https://pypi.org/project/Orange3-Fairness/"><img alt="PyPI" src="https://img.shields.io/pypi/v/orange3-fairness?color=blue"></a>
-<a href="https://app.codecov.io/gh/ZanMervic/orange3-fairness/"><img alt="Coverage Status" src="https://codecov.io/gh/ZanMervic/orange3-fairness/branch/main/graph/badge.svg"></a>
+<a href="https://codecov.io/gh/ZanMervic/orange3-fairness" ><img src="https://codecov.io/gh/ZanMervic/orange3-fairness/graph/badge.svg?token=MSQ0ZUPA6B"/></a>
+<a href='https://orange3-fairness.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/orange3-fairness/badge/?version=latest' alt='Documentation Status' /></a>
 </p>
 
 ![Example Workflow](doc/readme-screenshot.png)

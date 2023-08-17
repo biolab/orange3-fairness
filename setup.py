@@ -1,6 +1,8 @@
 from setuptools import setup, find_packages
 from os import path
 
+VERSION = "0.1.2"
+
 try:
     LONG_DESCRIPTION = open(
         path.join(path.dirname(__file__), "README.pypi"), "r", encoding="utf-8"
@@ -10,7 +12,7 @@ except FileNotFoundError:
 
 setup(
     name="Orange3-Fairness",
-    version="0.1.2",
+    version=VERSION,
     author="Bioinformatics Laboratory, FRI UL",
     author_email="contact@orange.biolab.si",
     maintainer="Zan Mervic",

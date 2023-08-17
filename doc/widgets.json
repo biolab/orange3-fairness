@@ -1,0 +1,63 @@
+[
+    [
+        "Fairness",
+        [
+            {
+                "text": "As Fairness",
+                "doc": "widgets/as-fairness.md",
+                "icon": "../orangecontrib/fairness/widgets/icons/as_fairness.svg",
+                "keywords": [
+                    "fairness"
+                ]
+            },
+            {
+                "text": "Dataset Bias",
+                "doc": "widgets/dataset-bias.md",
+                "icon": "../orangecontrib/fairness/widgets/icons/dataset_bias.svg",
+                "keywords": [
+                    "fairness"
+                ]
+            },
+            {
+                "text": "Reweighing",
+                "doc": "widgets/reweighing.md",
+                "icon": "../orangecontrib/fairness/widgets/icons/reweighing.svg",
+                "keywords": [
+                    "fairness"
+                ]
+            },
+            {
+                "text": "Adversarial Debiasing",
+                "doc": "widgets/adversarial-debiasing.md",
+                "icon": "../orangecontrib/fairness/widgets/icons/adversarial_debiasing.svg",
+                "keywords": [
+                    "fairness"
+                ]
+            },
+            {
+                "text": "Equalized Odds Postprocessing",
+                "doc": "widgets/equalized-odds-postprocessing.md",
+                "icon": "../orangecontrib/fairness/widgets/icons/eq_odds_postprocessing.svg",
+                "keywords": [
+                    "fairness"
+                ]
+            },
+            {
+                "text": "Weighted Logistic Regression",
+                "doc": "widgets/weighted-logistic-regression.md",
+                "icon": "../orangecontrib/fairness/widgets/icons/weighted_log_reg.svg",
+                "keywords": [
+                    "fairness"
+                ]
+            },
+            {
+                "text": "Combine Preprocessors",
+                "doc": "widgets/combine-preprocessors.md",
+                "icon": "../orangecontrib/fairness/widgets/icons/combine_preprocessors.svg",
+                "keywords": [
+                    "fairness"
+                ]
+            }
+        ]
+    ]
+]

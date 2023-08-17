@@ -46,5 +46,11 @@ setup(
         "tensorflow>=2.12.0",
         "aif360==0.5.0",
         "numpy~=1.23.0"
-    ]
+    ],
+    extras_require={
+        "doc": [
+            "sphinx",
+            "recommonmark",
+        ]
+    },
 )

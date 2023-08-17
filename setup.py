@@ -50,6 +50,7 @@ setup(
     extras_require={
         "doc": [
             "sphinx",
+            "sphinx_rtd_theme",
             "recommonmark",
         ]
     },

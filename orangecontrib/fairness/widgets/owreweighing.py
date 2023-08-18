@@ -10,6 +10,7 @@ from aif360.algorithms.preprocessing import Reweighing as ReweighingAlgorithm
 from orangecontrib.fairness.widgets.utils import (
     table_to_standard_dataset,
     check_fairness_data,
+    check_for_missing_values
 )
 
 
@@ -112,6 +113,7 @@ class OWReweighing(OWWidget):
 
     @Inputs.data
     @check_fairness_data
+    @check_for_missing_values
     def set_data(self, data: Optional[Table]) -> None:
         """Handling the input data by saving it"""
         if not data:

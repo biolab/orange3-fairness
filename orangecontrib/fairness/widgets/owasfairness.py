@@ -5,11 +5,10 @@ from Orange.widgets.settings import ContextSetting, DomainContextHandler, Settin
 from Orange.widgets.widget import Input, Output, OWWidget
 from Orange.widgets.utils.itemmodels import DomainModel, PyListModel
 from Orange.data import Table, Domain, DiscreteVariable
-from Orange.preprocess import RemoveNaNRows
 
 from Orange.widgets.utils.widgetpreview import WidgetPreview
 
-from orangecontrib.fairness.widgets.utils import check_for_missing_rows, check_data_structure
+from orangecontrib.fairness.widgets.utils import check_data_structure
 
 
 class OWAsFairness(OWWidget):
@@ -95,7 +94,6 @@ class OWAsFairness(OWWidget):
         )
 
     @Inputs.data
-    @check_for_missing_rows
     @check_data_structure
     def set_data(self, data: Table) -> None:
         """
@@ -108,7 +106,6 @@ class OWAsFairness(OWWidget):
 
         if data is not None:
             # Remove all rows with missing values from the data, because the fairness algorithms can't handle missing values.
-            data = RemoveNaNRows()(data)
 
             # Create a table with the same data but a different domain
             self._data = data.transform(data.domain)

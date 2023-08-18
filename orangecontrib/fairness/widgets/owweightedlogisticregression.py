@@ -1,8 +1,10 @@
-from Orange.base import Learner
-from Orange.classification.logistic_regression import LogisticRegressionLearner
-
 import Orange.widgets.model.owlogisticregression
 
+from Orange.base import Learner
+from Orange.classification.logistic_regression import LogisticRegressionLearner
+from Orange.preprocess import Impute
+
+from orangecontrib.fairness.widgets.utils import check_for_missing_values
 
 class WeightedLogisticRegressionLearner(LogisticRegressionLearner):
     """
@@ -39,3 +41,18 @@ class OWWeightedLogisticRegression(Orange.widgets.model.owlogisticregression.OWL
     replaces = []
 
     LEARNER = WeightedLogisticRegressionLearner
+
+
+    class Inputs(Orange.widgets.model.owlogisticregression.OWLogisticRegression.Inputs):
+        """The inputs of the widget - the dataset"""
+        pass
+
+    @Inputs.data
+    @check_for_missing_values
+    def set_data(self, data=None):
+        """Handling input data by first imputing missing values if any and then calling the super class"""
+        if data is not None:
+            if data.has_missing():
+                data = Impute()(data)
+        super().set_data(data)
+

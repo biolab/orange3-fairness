@@ -63,7 +63,7 @@ class StatisticalParityDifference(FairnessScorer):
     """Class for Statistical Parity Difference fairness scoring."""
 
     name = "SPD"
-    long_name = "Statistical Parity Difference"
+    long_name = "Statistical Parity Difference (ideal = 0)"
 
     def metric(self, classification_metric):
         return classification_metric.statistical_parity_difference()
@@ -73,7 +73,7 @@ class EqualOpportunityDifference(FairnessScorer):
     """Class for Equal Opportunity Difference fairness scoring."""
 
     name = "EOD"
-    long_name = "Equal Opportunity Difference"
+    long_name = "Equal Opportunity Difference (ideal = 0)"
 
     def metric(self, classification_metric):
         return classification_metric.equal_opportunity_difference()
@@ -83,7 +83,7 @@ class AverageOddsDifference(FairnessScorer):
     """Class for Average Odds Difference fairness scoring."""
 
     name = "AOD"
-    long_name = "Average Odds Difference"
+    long_name = "Average Odds Difference (ideal = 0)"
 
     def metric(self, classification_metric):
         return classification_metric.average_odds_difference()
@@ -93,7 +93,7 @@ class DisparateImpact(FairnessScorer):
     """Class for Disparate Impact fairness scoring."""
 
     name = "DI"
-    long_name = "Disparate Impact"
+    long_name = "Disparate Impact (ideal = 1)"
 
     # TODO: When using randomize, models sometimes predict the same class for all instances
     # This can lead to division by zero in the Disparate Impact score (and untrue results for the other scores)

@@ -7,6 +7,7 @@ from Orange.data import Table
 from Orange.widgets.utils.concurrent import TaskState, ConcurrentWidgetMixin
 from Orange.base import Model
 from Orange.widgets.widget import Msg
+from Orange.preprocess import Impute
 
 from AnyQt.QtWidgets import QFormLayout, QLabel
 from AnyQt.QtCore import Qt
@@ -15,7 +16,8 @@ from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLear
 from orangecontrib.fairness.widgets.utils import (
     check_fairness_data,
     check_for_reweighing_preprocessor,
-    check_for_reweighted_data
+    check_for_reweighted_data,
+    check_for_missing_values
 )
 
 
@@ -218,6 +220,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     @Inputs.data
     @check_fairness_data
     @check_for_reweighted_data
+    @check_for_missing_values
     def set_data(self, data):
         """
         Function which is called when the user inputs data, it first checks if the

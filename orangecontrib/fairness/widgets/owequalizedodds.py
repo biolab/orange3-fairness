@@ -11,7 +11,7 @@ from AnyQt.QtWidgets import QFormLayout
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.postprocessing import PostprocessingLearner
-from orangecontrib.fairness.widgets.utils import check_fairness_data
+from orangecontrib.fairness.widgets.utils import check_fairness_data, check_for_missing_values
 
 
 class InterruptException(Exception):
@@ -79,6 +79,7 @@ class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
 
     @Inputs.data
     @check_fairness_data
+    @check_for_missing_values
     def set_data(self, data: Table):
         """
         Function which is called when the user inputs data, it first checks if the

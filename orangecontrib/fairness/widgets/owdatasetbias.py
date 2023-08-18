@@ -6,7 +6,7 @@ from Orange.data import Table
 
 from aif360.metrics import BinaryLabelDatasetMetric
 
-from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, check_fairness_data
+from orangecontrib.fairness.widgets.utils import table_to_standard_dataset, check_fairness_data, check_for_missing_values
 
 
 class OWDatasetBias(OWWidget):
@@ -35,6 +35,7 @@ class OWDatasetBias(OWWidget):
 
     @Inputs.data
     @check_fairness_data
+    @check_for_missing_values
     def set_data(self, data: Optional[Table]) -> None:
         """Computes the bias of the dataset and displays it on the widget."""
         if (

@@ -4,13 +4,17 @@ from aif360.datasets import StandardDataset
 from Orange.widgets.utils.messages import UnboundMsg
 from Orange.data import Table, Domain
 from Orange.preprocess.preprocess import PreprocessorList
+from Orange.preprocess import Impute
 
 MISSING_FAIRNESS_ATTRIBUTES: str = (
     "The dataset does not contain the fairness attributes. \n"
     'Use the "As Fairness Data" widget to add them. '
 )
 
-MISSING_ROWS: str = "Rows with missing values detected. They will be omitted."
+MISSING_VALUES: str = (
+    "Missing values detected in the data. \n" 
+    "They will automatically be imputed with the average or most frequent value."
+)
 
 MISSING_CLASS_VARIABLE: str = (
     "The dataset does not contain a class variable. \n"
@@ -131,12 +135,12 @@ def check_fairness_data(f):
     return wrapper
 
 
-def check_for_missing_rows(f):
+def check_for_missing_values(f):
     """A wrapper function which checks if the data contains missing rows."""
 
     @wraps(f)
     def wrapper(widget, data: Table, *args, **kwargs):
-        widget.Warning.add_message("missing_values_detected", UnboundMsg(MISSING_ROWS))
+        widget.Warning.add_message("missing_values_detected", UnboundMsg(MISSING_VALUES))
         widget.Warning.missing_values_detected.clear()
 
         if data is not None and isinstance(data, Table):
@@ -253,6 +257,10 @@ def table_to_standard_dataset(data) -> None:
 
     if not contains_fairness_attributes(data.domain):
         raise ValueError(MISSING_FAIRNESS_ATTRIBUTES)
+    
+    if data.has_missing():
+        data = Impute()(data)
+
     xdf, ydf, mdf = data.to_pandas_dfs()
     # Merge xdf and ydf TODO: Check if I need to merge mdf
     # This dataframe consists of all the data, the categorical variables values are represented with the index of the value in domain[attribute].values
@@ -309,6 +317,13 @@ def table_to_standard_dataset(data) -> None:
         ],  # privileged_classes: the values of the protected attribute that are considered privileged (in this case they are index encoded)
         # categorical_features = discrete_variables,
     )
+
+    # TODO: Temporary adversarial debiasing bug fix (For some reason even if the favorable_class_value_ordinal is set correctly, the favorable and unfavorable labels are switched when I use an average Imputer)
+    # This is a similar problem to one I have once already fixed: https://github.com/ZanMervic/orange3-fairness/commit/bb9bcaf69c41aa479d1eea069cc6a42646ee9dba
+    if standard_dataset.favorable_label != favorable_class_value_indexes:
+        old_favorable_label = standard_dataset.favorable_label
+        standard_dataset.favorable_label = standard_dataset.unfavorable_label
+        standard_dataset.unfavorable_label = old_favorable_label
 
     if "weights" in mdf:
         standard_dataset.instance_weights = mdf["weights"].to_numpy()

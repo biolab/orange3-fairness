@@ -104,7 +104,7 @@ def contains_fairness_attributes(domain: Domain) -> bool:
     """Check if the domain contains fairness attributes."""
     if "favorable_class_value" not in domain.class_var.attributes:
         return False
-    for var in domain:
+    for var in domain.attributes:
         if "privileged_pa_values" in var.attributes:
             return True
     return False

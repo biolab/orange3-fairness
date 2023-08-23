@@ -22,7 +22,7 @@ class OWAsFairness(OWWidget):
     priority = 0
 
     want_main_area = False
-    resizing_enabled = False
+    resizing_enabled = True
 
     class Inputs:
         """Define the inputs to the widgets"""
@@ -105,8 +105,6 @@ class OWAsFairness(OWWidget):
         domain: Optional[Domain] = None
 
         if data is not None:
-            # Remove all rows with missing values from the data, because the fairness algorithms can't handle missing values.
-
             # Create a table with the same data but a different domain
             self._data = data.transform(data.domain)
             # Copy the attributes from the original data to the new data
@@ -225,9 +223,12 @@ class OWAsFairness(OWWidget):
             if attribute.name == self.protected_attribute.name:
                 new_attr = attribute.copy()
                 new_attr.attributes["privileged_pa_values"] = self.privileged_pa_values
-            # Else just copy the attribute
+            # Else just copy the attribute and remove the privileged_pa_values attribute if it exists
             else:
-                new_attr = attribute
+                new_attr = attribute.copy()
+                if "privileged_pa_values" in new_attr.attributes:
+                    del new_attr.attributes["privileged_pa_values"]
+
             new_attributes.append(new_attr)
 
         # Create new class_var

@@ -56,6 +56,9 @@ class TestOWEqualizedOdds(WidgetTest):
         self.send_signal(self.widget.Inputs.input_learner, LogisticRegressionLearner())
         learner = self.widget.create_learner()
 
+        # Change the test and score cross validation to 2 folds
+        self.test_and_score.n_folds = 0
+
         self.send_signal(
             self.test_and_score.Inputs.train_data,
             test_data,

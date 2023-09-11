@@ -1,11 +1,8 @@
-import os
 import unittest
 
-from Orange.evaluation import CrossValidation, TestOnTrainingData, TestOnTestData
+from Orange.evaluation import CrossValidation, TestOnTrainingData
 from Orange.widgets.tests.base import WidgetTest
 from Orange.data import Table
-from Orange.widgets.evaluate.owpredictions import OWPredictions
-from Orange.widgets.evaluate.owtestandscore import OWTestAndScore
 
 from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup, print_metrics
 from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
@@ -15,6 +12,7 @@ from orangecontrib.fairness.widgets.owadversarialdebiasing import OWAdversarialD
 class TestOWAdversarialDebiasing(WidgetTest):
     def setUp(self):
         self.test_data_path = "https://datasets.biolab.si/core/adult.tab"
+        self.test_incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
         self.widget = self.create_widget(OWAdversarialDebiasing)
         self.as_fairness = self.create_widget(OWAsFairness)
 
@@ -40,7 +38,7 @@ class TestOWAdversarialDebiasing(WidgetTest):
 
     def test_incorrect_input_data(self):
         """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
-        test_data = Table(self.test_data_path)
+        test_data = Table(self.test_incorrect_input_data_path)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
 

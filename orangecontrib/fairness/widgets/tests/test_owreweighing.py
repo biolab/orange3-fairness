@@ -1,4 +1,3 @@
-import os
 import unittest
 import numpy as np
 
@@ -17,6 +16,7 @@ from orangecontrib.fairness.widgets.owcombinepreprocessors import OWCombinePrepr
 class TestOWReweighing(WidgetTest):
     def setUp(self) -> None:
         self.test_data_path = "https://datasets.biolab.si/core/adult.tab"
+        self.test_incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
         self.widget = self.create_widget(OWReweighing)
         self.as_fairness = self.create_widget(OWAsFairness)
         self.combine_preprocessors = self.create_widget(OWCombinePreprocessors)
@@ -30,7 +30,7 @@ class TestOWReweighing(WidgetTest):
 
     def test_incorrect_input_data(self):
         """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
-        test_data = Table(self.test_data_path)
+        test_data = Table(self.test_incorrect_input_data_path)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
 

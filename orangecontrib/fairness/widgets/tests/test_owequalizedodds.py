@@ -1,11 +1,11 @@
 import unittest
-import os
 
 from Orange.widgets.tests.base import WidgetTest
 from Orange.classification.logistic_regression import LogisticRegressionLearner
 from Orange.widgets.evaluate.owpredictions import OWPredictions
 from Orange.widgets.evaluate.owtestandscore import OWTestAndScore
 from Orange.evaluation import scoring
+from Orange.data import Table
 
 from orangecontrib.fairness.evaluation import scoring as bias_scoring
 from orangecontrib.fairness.widgets.owequalizedodds import OWEqualizedOdds
@@ -16,6 +16,7 @@ from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup
 class TestOWEqualizedOdds(WidgetTest):
     def setUp(self) -> None:
         self.test_data_path = "https://datasets.biolab.si/core/adult.tab"
+        self.test_incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
         self.widget = self.create_widget(OWEqualizedOdds)
         self.as_fairness = self.create_widget(OWAsFairness)
         self.predictions = self.create_widget(OWPredictions)
@@ -24,6 +25,12 @@ class TestOWEqualizedOdds(WidgetTest):
     def test_no_data(self):
         """Check that the widget doesn't crash on empty data"""
         self.send_signal(self.widget.Inputs.data, None)
+
+    def test_incorrect_input_data(self):
+        """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
+        test_data = Table(self.test_incorrect_input_data_path)
+        self.send_signal(self.widget.Inputs.data, test_data)
+        self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
 
     def test_compatibility_with_predictions(self):
         """Check that the widget works with the predictions widget"""

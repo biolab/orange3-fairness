@@ -23,8 +23,8 @@ class PostprocessingModel(Model):
     def predict(self, data):
         """Function used to preprocess, predict and postprocess on new data"""
         if isinstance(data, Table):
-            # Get the predictions and scores from the model
-            predictions, scores = self.model(data, ret=Model.ValueProbs)
+            # Get the predictions and scores from the model (we don't need the scores because they are irrelevant after postprocessing)
+            predictions, _ = self.model(data, ret=Model.ValueProbs)
 
             standard_dataset, _, _ = table_to_standard_dataset(data)
             standard_dataset_pred = standard_dataset.copy(deepcopy=True)
@@ -34,6 +34,11 @@ class PostprocessingModel(Model):
             standard_dataset_pred_transf = self.postprocessor.predict(
                 standard_dataset_pred
             )
+
+            # Create dummy scores from predictions (if the predictions are 0 or 1, the scores will be 0 or 1)
+            scores = np.zeros((len(standard_dataset_pred_transf.labels), 2))
+            scores[:, 1] = standard_dataset_pred_transf.labels.ravel()
+            scores[:, 0] = 1 - standard_dataset_pred_transf.labels.ravel()
 
             return np.squeeze(standard_dataset_pred_transf.labels, axis=1), scores
 

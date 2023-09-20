@@ -246,18 +246,15 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         Responsible for creating the learner with the parameters we want
         It is called in the superclass by the update_learner method
         """
-        kwargs = {
-            "classifier_num_hidden_units": self.hidden_layers_neurons,
-            "num_epochs": self.number_of_epochs,
-            "batch_size": self.batch_size,
-            "debias": self.debias,
-            "adversary_loss_weight": 0,
-        }
-        if self.repeatable:
-            kwargs["seed"] = 42
-        if self.debias:
-            kwargs["adversary_loss_weight"] = self.selected_lambda
-        return self.LEARNER(**kwargs, preprocessors=self.preprocessors)
+        return self.LEARNER(
+            preprocessors=self.preprocessors, 
+            seed=42 if self.repeatable else -1,
+            classifier_num_hidden_units=self.hidden_layers_neurons, 
+            num_epochs=self.number_of_epochs, 
+            batch_size=self.batch_size, 
+            debias=self.debias, 
+            adversary_loss_weight=self.selected_lambda if self.debias else 0
+    )
 
     def update_model(self):
         """Responsible for starting a new thread, fitting the learner and sending the created model to the output"""

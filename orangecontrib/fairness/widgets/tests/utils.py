@@ -1,27 +1,6 @@
-from Orange.data import Table
-from Orange.widgets.tests.utils import simulate
-from Orange.widgets.utils.itemmodels import select_rows
 from Orange.evaluation import scoring
 
 from orangecontrib.fairness.evaluation import scoring as bias_scoring
-
-
-def as_fairness_setup(self):
-    test_data = Table(f"{self.test_data_path}")
-    self.send_signal(
-        self.as_fairness.Inputs.data,
-        test_data,
-        widget=self.as_fairness,
-    )
-    simulate.combobox_activate_item(
-        self.as_fairness.controls.favorable_class_value, ">50K"
-    )
-    simulate.combobox_activate_item(
-        self.as_fairness.controls.protected_attribute, "sex"
-    )
-    select_rows(self.as_fairness.controls.privileged_pa_values, [1])
-    output_data = self.get_output(self.as_fairness.Outputs.data)
-    return output_data
 
 
 def print_metrics(results, bias=True):
@@ -35,3 +14,18 @@ def print_metrics(results, bias=True):
         print(f"EOD: {bias_scoring.EqualOpportunityDifference(results)}")
         print(f"AOD: {bias_scoring.AverageOddsDifference(results)}")
         print(f"DI: {bias_scoring.DisparateImpact(results)}")
+
+def fairness_attributes(domain):
+    favorable_class_value = None
+    protected_attribute = None
+    privileged_pa_values = None
+    if "favorable_class_value" in domain.class_var.attributes:
+        favorable_class_value = domain.class_var.attributes[
+                "favorable_class_value"
+            ]
+        for var in domain.attributes:
+            if "privileged_pa_values" in var.attributes:
+                protected_attribute = var
+                privileged_pa_values = var.attributes["privileged_pa_values"]
+                break
+    return favorable_class_value, protected_attribute, privileged_pa_values

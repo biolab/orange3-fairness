@@ -31,12 +31,20 @@ class AdversarialDebiasingModel(Model):
             predictions = self._model.predict(standard_dataset)
 
             # Array of scores with a column of scores for each class
-            scores = np.hstack(
-                (predictions.scores, (1 - predictions.scores).reshape(-1, 1))
-            )
+            # The scores given by the model are always for the favorable class
+            # If the favorable class is 1 then the scores need to be flipped or else the AUC will be "reversed"
+            # (the first column is 1 - scores and the second column is scores)
+            if standard_dataset.favorable_label == 0:
+                scores = np.hstack(
+                    (predictions.scores, (1 - predictions.scores).reshape(-1, 1))
+                )
+            else:
+                scores = np.hstack(
+                    ((1 - predictions.scores).reshape(-1, 1), predictions.scores)
+                )
 
-            temp = np.squeeze(predictions.labels, axis=1), scores
-            return temp
+            predictions_scores = np.squeeze(predictions.labels, axis=1), scores
+            return predictions_scores
         else:
             raise TypeError("Data is not of type Table")
 
@@ -58,15 +66,26 @@ class AdversarialDebiasingLearner(Learner):
     preprocessors = [Normalize()]
     callback = None
 
-    def __init__(self, preprocessors=None, **kwargs):
-        self.params = vars()
+    def __init__(self, preprocessors=None, classifier_num_hidden_units=100, 
+                 num_epochs=50, batch_size=128, debias=True, 
+                 adversary_loss_weight=0.1, seed=-1):
         super().__init__(preprocessors=preprocessors)
+        self.params = vars()
+
+        self.model_params = {
+            "classifier_num_hidden_units": classifier_num_hidden_units,
+            "num_epochs": num_epochs,
+            "batch_size": batch_size,
+            "debias": debias,
+            "adversary_loss_weight": adversary_loss_weight,
+            **({"seed": seed} if seed != -1 else {})
+        }
 
     def _calculate_total_runs(self, data):
         """Function used to calculate the total number of runs the learner will perform on the data"""
         # This is need to calculate and display the progress of the training
-        num_epochs = self.params["kwargs"]["num_epochs"]
-        batch_size = self.params["kwargs"]["batch_size"]
+        num_epochs = self.params["num_epochs"]
+        batch_size = self.params["batch_size"]
         num_instances = len(data)
         num_batches = np.ceil(num_instances / batch_size)
         total_runs = num_epochs * num_batches
@@ -106,7 +125,7 @@ class AdversarialDebiasingLearner(Learner):
 
         # Create a model using the parameters from the widget and fit it to the data
         model = AdversarialDebiasing(
-            **self.params["kwargs"],
+            **self.model_params,
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,
             sess=sess,

@@ -4,21 +4,20 @@ from Orange.widgets.tests.base import WidgetTest
 from Orange.classification.logistic_regression import LogisticRegressionLearner
 from Orange.widgets.evaluate.owpredictions import OWPredictions
 from Orange.widgets.evaluate.owtestandscore import OWTestAndScore
-from Orange.evaluation import scoring
+from Orange.evaluation import CrossValidation, AUC, CA
+from Orange.base import Model
 from Orange.data import Table
 
 from orangecontrib.fairness.evaluation import scoring as bias_scoring
 from orangecontrib.fairness.widgets.owequalizedodds import OWEqualizedOdds
-from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
-from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup
+from orangecontrib.fairness.modeling.postprocessing import PostprocessingLearner
 
 
 class TestOWEqualizedOdds(WidgetTest):
     def setUp(self) -> None:
-        self.test_data_path = "https://datasets.biolab.si/core/adult.tab"
-        self.test_incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
+        self.data_path_adult = "https://datasets.biolab.si/core/german-credit-data.tab"
+        self.incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
         self.widget = self.create_widget(OWEqualizedOdds)
-        self.as_fairness = self.create_widget(OWAsFairness)
         self.predictions = self.create_widget(OWPredictions)
         self.test_and_score = self.create_widget(OWTestAndScore)
 
@@ -28,13 +27,32 @@ class TestOWEqualizedOdds(WidgetTest):
 
     def test_incorrect_input_data(self):
         """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
-        test_data = Table(self.test_incorrect_input_data_path)
+        test_data = Table(self.incorrect_input_data_path)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
 
+    def test_learner_output(self):
+        """Check if the widget outputs a learner"""
+        self.send_signal(self.widget.Inputs.input_learner, LogisticRegressionLearner())
+        learner = self.widget.create_learner()
+
+        self.assertIsNotNone(learner)
+
+    def test_model_output(self):
+        """Check if the widget outputs a model"""
+        test_data = Table(self.data_path_adult)
+
+        self.send_signal(self.widget.Inputs.input_learner, LogisticRegressionLearner())
+        self.send_signal(self.widget.Inputs.data, test_data)
+        self.wait_until_finished(self.widget, timeout=200000)
+        model = self.get_output(self.widget.Outputs.model)
+
+        self.assertIsNotNone(model)
+
+
     def test_compatibility_with_predictions(self):
         """Check that the widget works with the predictions widget"""
-        test_data = as_fairness_setup(self)
+        test_data = Table(self.data_path_adult)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.send_signal(self.widget.Inputs.input_learner, LogisticRegressionLearner())
         learner = self.widget.create_learner()
@@ -58,7 +76,7 @@ class TestOWEqualizedOdds(WidgetTest):
 
     def test_compatibility_with_test_and_score(self):
         """Check that the widget works with the test and score widget"""
-        test_data = as_fairness_setup(self)
+        test_data = Table(self.data_path_adult)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.send_signal(self.widget.Inputs.input_learner, LogisticRegressionLearner())
         learner = self.widget.create_learner()
@@ -74,7 +92,7 @@ class TestOWEqualizedOdds(WidgetTest):
         self.send_signal(
             self.test_and_score.Inputs.learner, learner, widget=self.test_and_score
         )
-        self.wait_until_finished(self.test_and_score, timeout=20000)
+        self.wait_until_finished(self.test_and_score, timeout=50000)
         predictions = self.get_output(
             self.test_and_score.Outputs.predictions, widget=self.test_and_score
         )
@@ -88,7 +106,7 @@ class TestOWEqualizedOdds(WidgetTest):
 
     def test_effecitveness(self):
         """Check that the widget works with the predictions widget"""
-        test_data = as_fairness_setup(self)
+        test_data = Table(self.data_path_adult)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.send_signal(self.widget.Inputs.input_learner, LogisticRegressionLearner())
         learner = self.widget.create_learner()
@@ -116,7 +134,7 @@ class TestOWEqualizedOdds(WidgetTest):
         )
 
         # Check that the two results are different
-        self.assertNotEqual(scoring.CA(results), scoring.CA(normal_results))
+        self.assertNotEqual(CA(results), CA(normal_results))
 
         aod = bias_scoring.AverageOddsDifference(results)
         normal_aod = bias_scoring.AverageOddsDifference(normal_results)
@@ -133,36 +151,38 @@ class TestOWEqualizedOdds(WidgetTest):
         self.widget.repeatable = False
         self.assertFalse(self.widget.repeatable)
 
+class TestEqualizedOddsPostprocessing(unittest.TestCase):
+    def setUp(self):
+        self.data_path_adult = "https://datasets.biolab.si/core/adult.tab"
 
-    # def test_with_learner_widget(self):
-    #     from Orange.widgets.model.owrandomforest import OWRandomForest
+    def test_adversarial_learner(self):
+        """Check if the adversarial learner works"""
+        learner = PostprocessingLearner(LogisticRegressionLearner())
+        self.assertIsNotNone(learner)
+        cv = CrossValidation(k=2)
+        results = cv(Table(self.data_path_adult), [learner])
+        auc, ca = AUC(results), CA(results)
 
-    #     random_forest_widget = self.create_widget(OWRandomForest)
-    #     learner = self.get_output(random_forest_widget.Outputs.learner, random_forest_widget)
+        self.assertGreaterEqual(auc, 0.5)
+        self.assertGreaterEqual(ca, 0.5)
 
-    #     self.assertIsNotNone(learner)
+    def test_adversarial_model(self):
+        """Check if the adversarial model works"""
+        learner = PostprocessingLearner(LogisticRegressionLearner())
+        data = Table(self.data_path_adult)
+        model = learner(data[:len(data) // 2])
+        self.assertIsNotNone(model)
 
-    #     test_data = as_fairness_setup(self)
-    #     self.send_signal(self.widget.Inputs.data, test_data)
-    #     self.send_signal(self.widget.Inputs.learner, learner)
-    #     learner = self.widget.create_learner()
-    #     model = learner(test_data)
+        predictions = model(data[len(data) // 2:], ret=Model.ValueProbs )
+        self.assertIsNotNone(predictions)
 
-    #     self.send_signal(
-    #         self.predictions.Inputs.data, test_data, widget=self.predictions
-    #     )
-    #     self.send_signal(
-    #         self.predictions.Inputs.predictors, model, widget=self.predictions
-    #     )
-    #     predictions = self.get_output(
-    #         self.predictions.Outputs.predictions, widget=self.predictions
-    #     )
-    #     results = self.get_output(
-    #         self.predictions.Outputs.evaluation_results, widget=self.predictions
-    #     )
+        labels, scores = predictions
 
-    #     self.assertIsNotNone(predictions)
-    #     self.assertIsNotNone(results)
+        self.assertEqual(len(labels), len(scores))
+        self.assertEqual(len(labels), len(data[len(data) // 2:]))
+        self.assertLess(abs(scores.sum(axis=1) - 1).all(), 1e-6)
+        self.assertTrue(all(label in [0, 1] for label in labels))
+
 
 
 if __name__ == "__main__":

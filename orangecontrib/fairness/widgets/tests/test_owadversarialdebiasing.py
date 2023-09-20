@@ -10,7 +10,7 @@ from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLear
 
 class TestOWAdversarialDebiasing(WidgetTest):
     def setUp(self):
-        self.data_path_adult = "https://datasets.biolab.si/core/adult.tab"
+        self.data_path_compas = "https://datasets.biolab.si/core/compas-scores-two-years.tab"
         self.incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
         self.widget = self.create_widget(OWAdversarialDebiasing)
 
@@ -21,11 +21,11 @@ class TestOWAdversarialDebiasing(WidgetTest):
     def test_parameters(self):
         """Check the selection of parameters"""
         # Change settings
-        self.widget.hidden_layers_neurons = 50
-        self.widget.number_of_epochs = 100
-        self.widget.batch_size = 64
-        self.widget.debias = False
-        self.widget.repeatable = True
+        self.widget.controls.hidden_layers_neurons.setValue(50)
+        self.widget.controls.number_of_epochs.setValue(100)
+        self.widget.controls.batch_size.setValue(64)
+        self.widget.controls.debias.setChecked(False)
+        self.widget.controls.repeatable.setChecked(True)
 
         # Check that settings have changed
         self.assertEqual(self.widget.hidden_layers_neurons, 50)
@@ -48,29 +48,27 @@ class TestOWAdversarialDebiasing(WidgetTest):
 
     def test_model_output(self):
         """Check if the widget outputs a model"""
-        self.widget.number_of_epochs = 5
+        self.widget.controls.number_of_epochs.setValue(5)
         self.widget.debias = True
-        test_data = Table(self.data_path_adult)
+        test_data = Table(self.data_path_compas)
 
         self.send_signal(self.widget.Inputs.data, test_data)
         self.wait_until_finished(self.widget, timeout=200000)
         model = self.get_output(self.widget.Outputs.model)
-
         self.assertIsNotNone(model)
+
 
 
 class TestAdversarialDebiasing(unittest.TestCase):
     def setUp(self):
-        # self.data_path_adult = "https://datasets.biolab.si/core/adult.tab"
-        # self.data_path_adult = "https://datasets.biolab.si/core/compas-scores-two-years.tab"
-        self.data_path_adult = "https://datasets.biolab.si/core/german-credit-data.tab"
+        self.data_path_german = "https://datasets.biolab.si/core/german-credit-data.tab"
 
     def test_adversarial_learner(self):
         """Check if the adversarial learner works"""
         learner = AdversarialDebiasingLearner(num_epochs=20)
         self.assertIsNotNone(learner)
         cv = CrossValidation(k=2)
-        results = cv(Table(self.data_path_adult), [learner])
+        results = cv(Table(self.data_path_german), [learner])
         auc, ca = AUC(results), CA(results)
 
         self.assertGreaterEqual(auc, 0.5)
@@ -79,7 +77,7 @@ class TestAdversarialDebiasing(unittest.TestCase):
     def test_adversarial_model(self):
         """Check if the adversarial model works"""
         learner = AdversarialDebiasingLearner(num_epochs=20, seed=42)
-        data = Table(self.data_path_adult)
+        data = Table(self.data_path_german)
         model = learner(data[:len(data) // 2])
         self.assertIsNotNone(model)
 
@@ -94,36 +92,36 @@ class TestAdversarialDebiasing(unittest.TestCase):
         self.assertTrue(all(label in [0, 1] for label in labels))
 
 
-# class TestCallbackSession(unittest.TestCase):
-#     """
-#     In the adversarial.py file create a Subclass of tensorflow session with callback functionality for progress tracking and displaying.
-#     This class should be tested to ensure that the tf.Session has not been modified in a way that breaks the functionality of the widget.
-#     """
+class TestCallbackSession(unittest.TestCase):
+    """
+    In the adversarial.py file create a Subclass of tensorflow session with callback functionality for progress tracking and displaying.
+    This class should be tested to ensure that the tf.Session has not been modified in a way that breaks the functionality of the widget.
+    """
 
-#     def setUp(self):
-#         self.data_path_adult = "https://datasets.biolab.si/core/adult.tab"
-#         self.data = Table(self.data_path_adult)
-#         self.run_count = 0
-#         self.last_received_progress = None
+    def setUp(self):
+        self.data_path_adult = "https://datasets.biolab.si/core/adult.tab"
+        self.data = Table(self.data_path_adult)
+        self.run_count = 0
+        self.last_received_progress = None
 
-#     def callback_function(self, progress, msg=""):
-#         """Callback function that increments the run count and stores the received progress."""
-#         self.run_count += 1
-#         self.last_received_progress = progress
+    def callback_function(self, progress, msg=""):
+        """Callback function that increments the run count and stores the received progress."""
+        self.run_count += 1
+        self.last_received_progress = progress
 
-#     def test_callback_with_learner(self):
-#         # Define the learner
-#         learner = AdversarialDebiasingLearner(num_epochs=20, batch_size=128)
-#         expected_total_runs = learner._calculate_total_runs(self.data)
+    def test_callback_with_learner(self):
+        # Define the learner
+        learner = AdversarialDebiasingLearner(num_epochs=20, batch_size=128)
+        expected_total_runs = learner._calculate_total_runs(self.data)
 
-#         # Fit the learner to the data with the test callback function
-#         learner(self.data, progress_callback=self.callback_function)
+        # Fit the learner to the data with the test callback function
+        learner(self.data, progress_callback=self.callback_function)
 
-#         # Validate callback was called correct number of times (+- 15 runs)
-#         self.assertAlmostEqual(self.run_count, expected_total_runs, delta=15)
+        # Validate callback was called correct number of times (+- 15 runs)
+        self.assertAlmostEqual(self.run_count, expected_total_runs, delta=15)
 
-#         # Validate the progress callback values. It should be between 0 to 100.
-#         self.assertTrue(0 <= self.last_received_progress <= 100)
+        # Validate the progress callback values. It should be between 0 to 100.
+        self.assertTrue(0 <= self.last_received_progress <= 100)
 
 
 
@@ -227,3 +225,21 @@ if __name__ == "__main__":
 #     )
 
 #     print_metrics(results)
+
+# def test_model_with_predictions_and_average_impute(self):
+#     from Orange.widgets.evaluate.owpredictions import OWPredictions
+
+#     self.predictions = self.create_widget(OWPredictions)
+
+#     self.widget.number_of_epochs = 10
+#     self.widget.debias = True
+#     test_data = Table("C:/Users/zanme/Downloads/my_adult.pkl")
+
+#     self.send_signal(self.widget.Inputs.data, test_data)
+#     self.wait_until_finished(self.widget, timeout=200000)
+#     model = self.get_output(self.widget.Outputs.model)
+
+#     self.send_signal(self.predictions.Inputs.data, test_data)
+#     self.send_signal(self.predictions.Inputs.predictors, model)
+#     results = self.get_output(self.predictions.Outputs.evaluation_results)
+#     print(CA(results))

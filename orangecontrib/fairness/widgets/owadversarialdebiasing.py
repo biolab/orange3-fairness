@@ -69,9 +69,8 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         # This was slightly changed from the original to fit the new widget better
         ignored_preprocessors = Msg(
             "Ignoring default preprocessing. \n"
-            "Default preprocessing (scailing), has been replaced with user-specified "
-            "preprocessors. Problems may occur if these are inadequate"
-            "for the given data."
+            "Default preprocessing (scailing), has been replaced with user-specified preprocessors. \n"
+            "Problems may occur if these are inadequate for the given data."
         )
 
     # We define the learner we want to use

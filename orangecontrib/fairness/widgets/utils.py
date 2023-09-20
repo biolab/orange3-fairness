@@ -34,8 +34,8 @@ NO_CATEGORICAL_ATTRIBUTES: str = (
 )
 
 REWEIGHING_PREPROCESSOR: str = (
-    "This widget is not compatible with the reweighing preprocessor\n"
-    "The custom preprocessing is therefore being ignored."
+    "This widget is not compatible with the reweighing preprocessor. \n"
+    "The custom preprocessing is therefore being ignored and the default preprocessing is being used instead."
 )
 
 REWEIGHTED_DATA: str = (
@@ -252,6 +252,16 @@ def _add_dummy_class_column(data, df):
     df[data.domain.class_var.name] = repeated_values[: len(df)]
 
 
+def _correct_standard_dataset(standard_dataset, favorable_class_value_indexes):
+    """
+    Check if the favorable_label in the standard_dataset matches the 
+    favorable_class_value_indexes (the expected favorable label value) and correct it if needed.
+    """
+    if standard_dataset.favorable_label != favorable_class_value_indexes:
+        standard_dataset.favorable_label, standard_dataset.unfavorable_label = \
+            standard_dataset.unfavorable_label, standard_dataset.favorable_label
+
+
 def table_to_standard_dataset(data) -> None:
     """Converts an Orange.data.Table to an aif360 StandardDataset."""
 
@@ -286,11 +296,7 @@ def table_to_standard_dataset(data) -> None:
     # If the data is from a "predict" function call and does not contain the class variable we need to add it and fill it with dummy values
     # The dummy values need to contain all the possible values of the class variable (in its index representation)
     # This is because the aif360 StandardDataset requires the class variable to be present in the dataframe with all the possible values
-    if data.domain.class_var.name not in df.columns:
-        _add_dummy_class_column(data, df)
-
-
-    if df[data.domain.class_var.name].isnull().any():
+    if data.domain.class_var.name not in df.columns or df[data.domain.class_var.name].isnull().any():
         _add_dummy_class_column(data, df)
 
 
@@ -318,12 +324,12 @@ def table_to_standard_dataset(data) -> None:
         # categorical_features = discrete_variables,
     )
 
-    # TODO: Temporary adversarial debiasing bug fix (For some reason even if the favorable_class_value_ordinal is set correctly, the favorable and unfavorable labels are switched when I use an average Imputer)
-    # This is a similar problem to one I have once already fixed: https://github.com/ZanMervic/orange3-fairness/commit/bb9bcaf69c41aa479d1eea069cc6a42646ee9dba
-    if standard_dataset.favorable_label != favorable_class_value_indexes:
-        old_favorable_label = standard_dataset.favorable_label
-        standard_dataset.favorable_label = standard_dataset.unfavorable_label
-        standard_dataset.unfavorable_label = old_favorable_label
+    # Adversarial debiasing bug fix (in the prediction phase when using Average Impute and Predictions 
+    # widget all labels are set to the same value for some reason. This messes with the standard dataset 
+    # because it thinks the label is not binary and binarizes it on its own, and selects its own favorable_label
+    # which is not what we want or expect so in case that happens we want to set the favorable_label back to what it should be)
+    # (This could also apply to some other scenarios so it is better to have it here as a precaution)
+    _correct_standard_dataset(standard_dataset, favorable_class_value_indexes)
 
     if "weights" in mdf:
         standard_dataset.instance_weights = mdf["weights"].to_numpy()

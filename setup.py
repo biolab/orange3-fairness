@@ -18,7 +18,7 @@ setup(
     maintainer="Zan Mervic",
     description="Orange3 add-on for fairness-aware machine learning.",
     long_description=LONG_DESCRIPTION,
-    long_description_content_type='text/x-rst',
+    long_description_content_type='text/markdown',
     license="GPL3+",
     keywords=(
         "orange3 add-on",

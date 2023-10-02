@@ -1,3 +1,5 @@
+import importlib.util
+
 from functools import wraps
 from aif360.datasets import StandardDataset
 
@@ -41,6 +43,11 @@ REWEIGHING_PREPROCESSOR: str = (
 REWEIGHTED_DATA: str = (
     "This widget is not compatible with data which was preprocessed by a reweighing preprocessor."
 )
+
+
+def is_tensorflow_installed():
+    spec = importlib.util.find_spec("tensorflow")
+    return spec is not None
 
 
 #TODO: Make the fairness widgets compatible with eachother.
@@ -102,6 +109,8 @@ def check_for_reweighted_data(f):
 
 def contains_fairness_attributes(domain: Domain) -> bool:
     """Check if the domain contains fairness attributes."""
+    if domain is None or domain.class_var is None:
+        return False
     if "favorable_class_value" not in domain.class_var.attributes:
         return False
     for var in domain.attributes:

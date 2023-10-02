@@ -1,4 +1,3 @@
-from numpy import unique
 from abc import abstractmethod
 from Orange.data import DiscreteVariable, ContinuousVariable, Domain
 from Orange.evaluation.scoring import Score

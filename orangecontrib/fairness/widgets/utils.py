@@ -44,10 +44,29 @@ REWEIGHTED_DATA: str = (
     "This widget is not compatible with data which was preprocessed by a reweighing preprocessor."
 )
 
+TENSORFLOW_NOT_INSTALLED: str = (
+    "The Adversarial Debiasing widget requires TensorFlow, which is not installed.\n"
+    "Click on the widget to see the installation instructions."
+)
+
 
 def is_tensorflow_installed():
     spec = importlib.util.find_spec("tensorflow")
     return spec is not None
+
+
+def check_for_tensorflow(f):
+    """A function which checks if tensorflow is installed."""
+    
+    @wraps(f)
+    def wrapper(widget, input, *args, **kwargs):    
+        if not is_tensorflow_installed():
+            input = None
+
+        return f(widget, input, *args, **kwargs)
+
+    return wrapper
+
 
 
 #TODO: Make the fairness widgets compatible with eachother.

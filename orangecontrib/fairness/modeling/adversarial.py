@@ -14,7 +14,6 @@ from orangecontrib.fairness.widgets.utils import (
 if is_tensorflow_installed():
     from aif360.algorithms.inprocessing import AdversarialDebiasing
     import tensorflow.compat.v1 as tf
-
 else:
     AdversarialDebiasing = None
     tf = None

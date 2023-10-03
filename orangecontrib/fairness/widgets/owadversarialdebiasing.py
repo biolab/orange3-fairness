@@ -17,7 +17,9 @@ from orangecontrib.fairness.widgets.utils import (
     check_for_reweighing_preprocessor,
     check_for_reweighted_data,
     check_for_missing_values,
+    check_for_tensorflow,
     is_tensorflow_installed,
+    TENSORFLOW_NOT_INSTALLED,
 )
 
 
@@ -213,6 +215,9 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         layout.addWidget(label)
         
         box = gui.widgetBox(self.controlArea, True, orientation=layout)
+        
+        self.Error.add_message("no_tensorflow", TENSORFLOW_NOT_INSTALLED)
+        self.Error.no_tensorflow()
 
     def add_main_layout(self):
         if is_tensorflow_installed():
@@ -240,6 +245,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     # ---------Methods related to inputs--------------
 
     @Inputs.data
+    @check_for_tensorflow
     @check_fairness_data
     @check_for_reweighted_data
     @check_for_missing_values
@@ -252,6 +258,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         super().set_data(data)
 
     @Inputs.preprocessor
+    @check_for_tensorflow
     @check_for_reweighing_preprocessor
     def set_preprocessor(self, preprocessor):
         """

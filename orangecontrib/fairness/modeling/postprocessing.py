@@ -2,6 +2,7 @@ import numpy as np
 
 from Orange.base import Learner, Model
 from Orange.data import Table
+from Orange.evaluation import CrossValidation
 
 from aif360.algorithms.postprocessing import EqOddsPostprocessing
 
@@ -88,12 +89,20 @@ class PostprocessingLearner(Learner):
         if isinstance(data, Table):
             if not contains_fairness_attributes(data.domain):
                 raise ValueError(MISSING_FAIRNESS_ATTRIBUTES)
-
+            
             # Fit the model to the data
-            # TODO: Split the data into train and test data so we can fit the postprocessor on the test data to avoid data leakage
+            # the callback is currently not used for progress but to allow the user to interrupt the widget while the model is training
             model = self.learner(data, self.callback)
-            # Get the predictions from the model, which will be used to fit the postprocessor
-            predictions = model(data)
+
+            # Use cross validation to get the predictions, we do this to avoid having to use 
+            # a train/validation split to get the predictions required to fit the postprocessor
+            cv = CrossValidation(k=5)
+            # Including the callback in the cross validation will allow the user to 
+            # interrupt the widget when it's in the cross validation phase
+            res = cv(data, [self.learner], callback=self.callback) 
+            predictions = res.predicted[0]
+            row_indices = res.row_indices
+            predictions = predictions[np.argsort(row_indices)]
 
             # Get the predictions which will be used to fit the postprocessor
             (
@@ -117,7 +126,7 @@ class PostprocessingLearner(Learner):
 
     def __call__(self, data, progress_callback=None):
         self.callback = progress_callback
-        self.learner.callback = progress_callback
+        # self.learner.callback = progress_callback by adding this line, the progress will "work" for learners with the .callback attribute but it may cause problems for learners without it
         model = super().__call__(data)
         model.params = self.params
         return model

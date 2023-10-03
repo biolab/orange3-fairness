@@ -5,9 +5,7 @@ from Orange.widgets.tests.base import WidgetTest
 from Orange.preprocess.preprocess import PreprocessorList
 from Orange.data import Table
 
-from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
 from orangecontrib.fairness.widgets.owreweighing import OWReweighing
-from orangecontrib.fairness.widgets.tests.utils import as_fairness_setup
 from orangecontrib.fairness.widgets.owweightedlogisticregression import OWWeightedLogisticRegression
 from orangecontrib.fairness.widgets.owcombinepreprocessors import OWCombinePreprocessors
 
@@ -15,10 +13,9 @@ from orangecontrib.fairness.widgets.owcombinepreprocessors import OWCombinePrepr
 
 class TestOWReweighing(WidgetTest):
     def setUp(self) -> None:
-        self.test_data_path = "https://datasets.biolab.si/core/adult.tab"
-        self.test_incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
+        self.data_path_adult = "https://datasets.biolab.si/core/compas-scores-two-years.tab"
+        self.incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
         self.widget = self.create_widget(OWReweighing)
-        self.as_fairness = self.create_widget(OWAsFairness)
         self.combine_preprocessors = self.create_widget(OWCombinePreprocessors)
         self.weighted_logistic_regression = self.create_widget(OWWeightedLogisticRegression)
 
@@ -29,14 +26,14 @@ class TestOWReweighing(WidgetTest):
         self.assertIsNotNone(self.get_output(self.widget.Outputs.preprocessor))
 
     def test_incorrect_input_data(self):
-        """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
-        test_data = Table(self.test_incorrect_input_data_path)
+        """Check that the widget displays an error message when the input data does not have the fairness attributes"""
+        test_data = Table(self.incorrect_input_data_path)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
 
     def test_output_data(self):
         """Check that the widget handles data correctly and adds the 'weights' column"""
-        test_data = as_fairness_setup(self)
+        test_data = Table(self.data_path_adult)
         self.send_signal(self.widget.Inputs.data, test_data)
         output_data = self.get_output(self.widget.Outputs.data)
         self.assertIsNotNone(output_data)
@@ -44,7 +41,7 @@ class TestOWReweighing(WidgetTest):
 
     def test_preprocessor_output(self):
         """Check that the widget returns a working preprocessor"""
-        test_data = as_fairness_setup(self)
+        test_data = Table(self.data_path_adult)
         preprocessor = self.get_output(self.widget.Outputs.preprocessor)
         self.assertIsNotNone(preprocessor)
         preprocessed_data = preprocessor(test_data)
@@ -74,7 +71,7 @@ class TestOWReweighing(WidgetTest):
     def test_with_weighted_logistic_regression(self):
         """Check that the predictions of logistic regression on the original data and the preprocessed data are different"""
 
-        test_data = as_fairness_setup(self)
+        test_data = Table(self.data_path_adult)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.wait_until_finished(self.widget)
         preprocessed_data = self.get_output(self.widget.Outputs.data)

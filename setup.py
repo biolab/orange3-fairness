@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from os import path
 
-VERSION = "0.1.4"
+VERSION = "0.1.6"
 
 try:
     LONG_DESCRIPTION = open(
@@ -14,11 +14,12 @@ setup(
     name="Orange3-Fairness",
     version=VERSION,
     author="Bioinformatics Laboratory, FRI UL",
-    author_email="contact@orange.biolab.si",
+    author_email="info@biolab.si",
     maintainer="Zan Mervic",
+    url="https://github.com/biolab/orange3-fairness",
     description="Orange3 add-on for fairness-aware machine learning.",
     long_description=LONG_DESCRIPTION,
-    long_description_content_type='text/x-rst',
+    long_description_content_type='text/markdown',
     license="GPL3+",
     keywords=(
         "orange3 add-on",
@@ -43,7 +44,6 @@ setup(
         },
     install_requires=[
         "Orange3",
-        "tensorflow>=2.12.0",
         "aif360==0.5.0",
         "numpy~=1.23.0"
     ],

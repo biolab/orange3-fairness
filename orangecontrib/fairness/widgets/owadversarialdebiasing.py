@@ -7,9 +7,8 @@ from Orange.data import Table
 from Orange.widgets.utils.concurrent import TaskState, ConcurrentWidgetMixin
 from Orange.base import Model
 from Orange.widgets.widget import Msg
-from Orange.preprocess import Impute
 
-from AnyQt.QtWidgets import QFormLayout, QLabel
+from AnyQt.QtWidgets import QFormLayout, QLabel, QVBoxLayout
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLearner
@@ -17,8 +16,14 @@ from orangecontrib.fairness.widgets.utils import (
     check_fairness_data,
     check_for_reweighing_preprocessor,
     check_for_reweighted_data,
-    check_for_missing_values
+    check_for_missing_values,
+    check_for_tensorflow,
+    is_tensorflow_installed,
+    TENSORFLOW_NOT_INSTALLED,
 )
+
+
+
 
 
 class InterruptException(Exception):
@@ -69,9 +74,8 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         # This was slightly changed from the original to fit the new widget better
         ignored_preprocessors = Msg(
             "Ignoring default preprocessing. \n"
-            "Default preprocessing (scailing), has been replaced with user-specified "
-            "preprocessors. Problems may occur if these are inadequate"
-            "for the given data."
+            "Default preprocessing (scailing), has been replaced with user-specified preprocessors. \n"
+            "Problems may occur if these are inadequate for the given data."
         )
 
     # We define the learner we want to use
@@ -105,8 +109,8 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         ConcurrentWidgetMixin.__init__(self)
         OWBaseLearner.__init__(self)
 
-    def add_main_layout(self):
-        """Defines the main UI layout of the widget"""
+    def tensorflow_layout(self):
+        """Defines the main UI layout of the widget if the user has tensorflow installed"""
         form = QFormLayout()
         form.setFieldGrowthPolicy(form.AllNonFixedFieldsGrow)
         form.setLabelAlignment(Qt.AlignLeft)
@@ -198,6 +202,29 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         self.set_lambda()
         self._debias_changed()
 
+    def no_tensorflow_layout(self):
+        """Defines the main UI layout of the widget if the user doesn't have tensorflow installed"""
+
+        layout = QVBoxLayout()
+        label = QLabel(
+            'The Adversarial Debiasing widget requires TensorFlow, which is not installed.\n' 
+            'Install it via Options->Add-ons by clicking "Add more...", typing "tensorflow", and hitting "Add".\n'
+            'Note: TensorFlow installation may render Orange3 unusable, requiring a reinstallation.'
+        )
+        label.setWordWrap(True)
+        layout.addWidget(label)
+        
+        box = gui.widgetBox(self.controlArea, True, orientation=layout)
+        
+        self.Error.add_message("no_tensorflow", TENSORFLOW_NOT_INSTALLED)
+        self.Error.no_tensorflow()
+
+    def add_main_layout(self):
+        if is_tensorflow_installed():
+            self.tensorflow_layout()
+        else:	
+            self.no_tensorflow_layout()
+
     # ---------Methods related to UI------------
 
     def set_lambda(self):
@@ -218,6 +245,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     # ---------Methods related to inputs--------------
 
     @Inputs.data
+    @check_for_tensorflow
     @check_fairness_data
     @check_for_reweighted_data
     @check_for_missing_values
@@ -230,6 +258,7 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         super().set_data(data)
 
     @Inputs.preprocessor
+    @check_for_tensorflow
     @check_for_reweighing_preprocessor
     def set_preprocessor(self, preprocessor):
         """
@@ -246,18 +275,16 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         Responsible for creating the learner with the parameters we want
         It is called in the superclass by the update_learner method
         """
-        kwargs = {
-            "classifier_num_hidden_units": self.hidden_layers_neurons,
-            "num_epochs": self.number_of_epochs,
-            "batch_size": self.batch_size,
-            "debias": self.debias,
-            "adversary_loss_weight": 0,
-        }
-        if self.repeatable:
-            kwargs["seed"] = 42
-        if self.debias:
-            kwargs["adversary_loss_weight"] = self.selected_lambda
-        return self.LEARNER(**kwargs, preprocessors=self.preprocessors)
+        if is_tensorflow_installed():
+            return self.LEARNER(
+                preprocessors=self.preprocessors, 
+                seed=42 if self.repeatable else -1,
+                classifier_num_hidden_units=self.hidden_layers_neurons, 
+                num_epochs=self.number_of_epochs, 
+                batch_size=self.batch_size, 
+                debias=self.debias, 
+                adversary_loss_weight=self.selected_lambda if self.debias else 0
+            )
 
     def update_model(self):
         """Responsible for starting a new thread, fitting the learner and sending the created model to the output"""
@@ -303,5 +330,4 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 if __name__ == "__main__":
     from Orange.widgets.utils.widgetpreview import WidgetPreview
 
-    table = Table("orangedemo/tests/datasets/adult_all.pkl")
-    WidgetPreview(OWAdversarialDebiasing).run(input_data=table)
+    WidgetPreview(OWAdversarialDebiasing).run()

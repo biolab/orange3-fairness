@@ -69,7 +69,6 @@ def check_for_tensorflow(f):
 
 
 
-#TODO: Make the fairness widgets compatible with eachother.
 def check_for_reweighing_preprocessor(f):
     """A function which checks if the input to a widget is a reweighing preprocessor."""
     from orangecontrib.fairness.widgets.owreweighing import ReweighingTransform

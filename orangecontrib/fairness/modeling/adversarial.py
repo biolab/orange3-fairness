@@ -28,7 +28,6 @@ class AdversarialDebiasingModel(Model):
     def __init__(self, model):
         super().__init__()
         self._model = model
-        self.params = vars()
 
     def predict(self, data):
         """Function used to predict on new data"""

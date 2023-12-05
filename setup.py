@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from os import path
+from os import path, walk
 
 VERSION = "0.1.6"
 
@@ -9,6 +9,19 @@ try:
     ).read()
 except FileNotFoundError:
     LONG_DESCRIPTION = ""
+
+
+DATA_FILES = []
+
+def include_documentation(local_dir, install_dir):
+    global DATA_FILES
+    doc_files = []
+    for dirpath, dirs, files in walk(local_dir):
+        doc_files.append((dirpath.replace(local_dir, install_dir),
+                          [path.join(dirpath, f) for f in files]))
+    DATA_FILES.extend(doc_files)
+
+include_documentation('doc/_build/html', 'help/orange3-fairness')
 
 setup(
     name="Orange3-Fairness",
@@ -41,6 +54,9 @@ setup(
     entry_points={
         "orange3.addon": ("Orange3-Fairness = orangecontrib.fairness",),
         "orange.widgets": ("Fairness = orangecontrib.fairness.widgets",),
+        "orange.canvas.help": (
+        'html-index = orangecontrib.fairness.widgets:WIDGET_HELP_PATH',
+        ),
         },
     install_requires=[
         "Orange3",
@@ -54,4 +70,5 @@ setup(
             "recommonmark",
         ]
     },
+    data_files=DATA_FILES,
 )

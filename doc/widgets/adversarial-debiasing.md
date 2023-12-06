@@ -18,6 +18,13 @@ In short, **Adversarial Debiasing** is a classification algorithm with or withou
 
 ![](images/adversarial-debiasing.png)
 
+Warning
+-------
+
+The **Adversarial Debiasing** widget requires TensorFlow in order to work. Because TensorFlow is a big library, we made it an optional dependency. If you want to use the widget you can install TensorFlow by clicking the `Install TensorFlow` button in the widget.
+
+![](images/adversarial-debiasing-no-tensorflow.png)
+
 Example
 -------
 

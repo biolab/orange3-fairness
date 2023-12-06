@@ -7,8 +7,9 @@ from Orange.data import Table
 from Orange.widgets.utils.concurrent import TaskState, ConcurrentWidgetMixin
 from Orange.base import Model
 from Orange.widgets.widget import Msg
+from orangecanvas.application.addons import AddonManagerDialog
 
-from AnyQt.QtWidgets import QFormLayout, QLabel, QVBoxLayout
+from AnyQt.QtWidgets import QFormLayout, QLabel, QVBoxLayout, QPushButton
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLearner
@@ -208,16 +209,27 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         layout = QVBoxLayout()
         label = QLabel(
             'The Adversarial Debiasing widget requires TensorFlow, which is not installed.\n' 
-            'Install it via Options->Add-ons by clicking "Add more...", typing "tensorflow", and hitting "Add".\n'
-            'Note: TensorFlow installation may render Orange3 unusable, requiring a reinstallation.'
+            'You can install it by clicking the "Install TensorFlow" button below, selecting \n'
+            'the checkbox next to the "tensorflow" text and clicking the "Ok" button.\n'
+            'After that, you will need to restart Orange.'
         )
         label.setWordWrap(True)
         layout.addWidget(label)
+        button = QPushButton("Install TensorFlow")
+        button.clicked.connect(self.instaall_tensorflow)
+        layout.addWidget(button)
         
         box = gui.widgetBox(self.controlArea, True, orientation=layout)
         
         self.Error.add_message("no_tensorflow", TENSORFLOW_NOT_INSTALLED)
         self.Error.no_tensorflow()
+    
+    def instaall_tensorflow(self):
+        """
+        Installs tensorflow using the AddonManagerDialog
+        """
+        manager = AddonManagerDialog(self)
+        manager.runQueryAndAddResults(["tensorflow"])
 
     def add_main_layout(self):
         if is_tensorflow_installed():

@@ -10,7 +10,9 @@
 
 ![Example Workflow](doc/readme-screenshot.png)
 
-Fairness add-on for the [Orange](http://orangedatamining.com/).
+Orange3 Fairness is an add-on for the [Orange3](http://orangedatamining.com/) data mining suite. 
+It provides extensions for fairness-aware AI, which includes algorithms for detecting and mitigating 
+different types of biases in the data and the predictions of machine learning models. 
 
 
 # Easy installation

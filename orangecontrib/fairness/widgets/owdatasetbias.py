@@ -42,7 +42,9 @@ class OWDatasetBias(OWWidget):
             not data
         ):
             self.disparate_impact_label.setText("No data detected.")
+            self.disparate_impact_label.setToolTip("")
             self.statistical_parity_difference_label.setText("")
+            self.statistical_parity_difference_label.setToolTip("")
             return
 
         # Convert Orange data to aif360 StandardDataset
@@ -53,5 +55,21 @@ class OWDatasetBias(OWWidget):
         disparate_impact = dataset_metric.disparate_impact()
         statistical_parity_difference = dataset_metric.statistical_parity_difference()
         self.disparate_impact_label.setText(f"Disparate Impact (ideal = 1): {round(disparate_impact, 3)}")
+        self.disparate_impact_label.setToolTip(
+            "<p>Disparate Impact (DI): Measures the ratio of the ratios of favorable class values for an "
+            "unprivileged group to that of the privileged group. An ideal value of 1.0 means the ratio of "
+            "favorable class values is the same for both groups.</p>"
+            "<ul>"
+            "<li>DI &lt; 1.0: The privileged group has a higher percentage of favorable class values.</li>"
+            "<li>DI &gt; 1.0: The privileged group has a lower percentage of favorable class values.</li>"
+            "</ul>"
+        )
         self.statistical_parity_difference_label.setText(f"Statistical Parity Difference (ideal = 0): {round(statistical_parity_difference, 3)}")
-        
+        self.statistical_parity_difference_label.setToolTip(
+            "<p>Statistical Parity Difference (SPD): Measures the difference in ratios of favorable class values "
+            "between the unprivileged and the privileged groups. An ideal value for this metric is 0.</p>"
+            "<ul>"
+            "<li>SPD &lt; 0: The privileged group has a higher percentage of favorable class values.</li>"
+            "<li>SPD &gt; 0: The privileged group has a lower percentage of favorable class values.</li>"
+            "</ul>"
+        )

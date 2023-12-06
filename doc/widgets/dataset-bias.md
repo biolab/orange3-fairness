@@ -7,7 +7,8 @@ Computes the bias of a dataset.
 - Data: dataset to be evaluated
 
 
-**Dataset Bias** computes and displays the bias of a dataset. More specifically, it computes the disparate impact and statistical parity difference metrics for the dataset.
+**Dataset Bias** computes and displays the bias of a dataset. More specifically, it computes the disparate impact and statistical parity difference metrics for the dataset. \
+The ideal threshold is 1.0 for disparate impact and 0.0 for statistical parity difference. Values under the ideal threshold indicate bias towards the unprivileged group. Values above the ideal threshold indicate bias towards the privileged group.
 
 ![](images/dataset-bias.png)
 

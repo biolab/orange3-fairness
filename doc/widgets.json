@@ -3,9 +3,9 @@
         "Fairness",
         [
             {
-                "text": "As Fairness",
-                "doc": "widgets/as-fairness.md",
-                "icon": "../orangecontrib/fairness/widgets/icons/as_fairness.svg",
+                "text": "As Fairness Data",
+                "doc": "widgets/as-fairness-data.md",
+                "icon": "../orangecontrib/fairness/widgets/icons/as_fairness_data.svg",
                 "keywords": [
                     "fairness"
                 ]

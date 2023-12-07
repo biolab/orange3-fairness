@@ -7,7 +7,7 @@ Widgets
 .. toctree::
    :maxdepth: 1
 
-   widgets/as-fairness
+   widgets/as-fairness-data
    widgets/dataset-bias
    widgets/reweighing
    widgets/adversarial-debiasing

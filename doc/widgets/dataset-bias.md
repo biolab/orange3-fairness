@@ -19,6 +19,6 @@ This example shows a very simple use of the **Dataset Bias** widget. First we lo
 
 ![](images/dataset-bias-example.png)
 
-Note, we did not use the [As Fairness Data](as-fairness.md) widget before using the **Dataset Bias** widget. This is because the Adult dataset already has the required fairness meta-attributes added to it.
+Note, we did not use the [As Fairness Data](as-fairness-data.md) widget before using the **Dataset Bias** widget. This is because the Adult dataset already has the required fairness meta-attributes added to it.
 
 Another thing to note is that the **Dataset Bias** widget (and other fairness widgets) do not support missing values, this is indicated by the warning icon above the widget. Any missing values in the dataset will automatically be imputed with the average or most frequent value before being used by the widget.

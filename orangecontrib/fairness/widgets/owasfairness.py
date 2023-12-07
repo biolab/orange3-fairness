@@ -18,7 +18,7 @@ class OWAsFairness(OWWidget):
     """
     name = "As Fairness Data"
     description = "Converts a dataset to a fairness dataset with marked favorable class values, protected attributes and priviliged protected attribute values."
-    icon = 'icons/as_fairness.svg'
+    icon = 'icons/as_fairness_data.svg'
     priority = 0
 
     want_main_area = False

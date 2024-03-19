@@ -49,7 +49,6 @@ class TestOWEqualizedOdds(WidgetTest):
 
         self.assertIsNotNone(model)
 
-
     def test_compatibility_with_predictions(self):
         """Check that the widget works with the predictions widget"""
         test_data = Table(self.data_path_adult)
@@ -64,9 +63,14 @@ class TestOWEqualizedOdds(WidgetTest):
         self.send_signal(
             self.predictions.Inputs.predictors, model, widget=self.predictions
         )
-        predictions = self.get_output(
-            self.predictions.Outputs.predictions, widget=self.predictions
-        )
+        if hasattr(self.predictions.Outputs, "predictions"):
+            # OWPredictions in Orange3<3.37  has attribute named predictions
+            attr = self.predictions.Outputs.predictions
+        else:
+            # in Orange3>=3.37 predictions is replaced with selected_predictions
+            attr = self.predictions.Outputs.selected_predictions
+        predictions = self.get_output(attr, widget=self.predictions)
+
         results = self.get_output(
             self.predictions.Outputs.evaluation_results, widget=self.predictions
         )

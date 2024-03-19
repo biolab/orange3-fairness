@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from os import path, walk
 
-VERSION = "0.1.8"
+VERSION = "0.2.0"
 
 try:
     LONG_DESCRIPTION = open(
@@ -13,6 +13,7 @@ except FileNotFoundError:
 
 DATA_FILES = []
 
+
 def include_documentation(local_dir, install_dir):
     global DATA_FILES
     doc_files = []
@@ -20,6 +21,7 @@ def include_documentation(local_dir, install_dir):
         doc_files.append((dirpath.replace(local_dir, install_dir),
                           [path.join(dirpath, f) for f in files]))
     DATA_FILES.extend(doc_files)
+
 
 include_documentation('doc/_build/html', 'help/orange3-fairness')
 
@@ -34,15 +36,14 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     license="GPL3+",
-    keywords=(
+    keywords=[
         "orange3 add-on",
         "orange3 fairness",
-    ),
-
+    ],
     packages=find_packages(),
     package_data={
         "orangecontrib.fairness.widgets": ["icons/*"],
-        },
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Science/Research",
@@ -50,14 +51,14 @@ setup(
         "Operating System :: MacOS",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: Unix",
-        ],
+    ],
     entry_points={
         "orange3.addon": ("Orange3-Fairness = orangecontrib.fairness",),
         "orange.widgets": ("Fairness = orangecontrib.fairness.widgets",),
         "orange.canvas.help": (
-        'html-index = orangecontrib.fairness.widgets:WIDGET_HELP_PATH',
+            'html-index = orangecontrib.fairness.widgets:WIDGET_HELP_PATH',
         ),
-        },
+    },
     install_requires=[
         "numpy",
         "Orange3",

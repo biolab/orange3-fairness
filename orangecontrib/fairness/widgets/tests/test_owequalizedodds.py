@@ -1,3 +1,5 @@
+"""This file contains the tests for the OWEqualizedOdds widget."""
+
 import unittest
 
 from Orange.widgets.tests.base import WidgetTest
@@ -14,9 +16,15 @@ from orangecontrib.fairness.modeling.postprocessing import PostprocessingLearner
 
 
 class TestOWEqualizedOdds(WidgetTest):
+    """
+    Test class for the OWEqualizedOdds widget.
+    """
+
     def setUp(self) -> None:
         self.data_path_adult = "https://datasets.biolab.si/core/german-credit-data.tab"
-        self.incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
+        self.incorrect_input_data_path = (
+            "https://datasets.biolab.si/core/breast-cancer.tab"
+        )
         self.widget = self.create_widget(OWEqualizedOdds)
         self.predictions = self.create_widget(OWPredictions)
         self.test_and_score = self.create_widget(OWTestAndScore)
@@ -26,7 +34,10 @@ class TestOWEqualizedOdds(WidgetTest):
         self.send_signal(self.widget.Inputs.data, None)
 
     def test_incorrect_input_data(self):
-        """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
+        """
+        Check that the widget displays an error message when
+        the input data does not have the 'AsFairness' attributes
+        """
         test_data = Table(self.incorrect_input_data_path)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
@@ -155,7 +166,12 @@ class TestOWEqualizedOdds(WidgetTest):
         self.widget.repeatable = False
         self.assertFalse(self.widget.repeatable)
 
+
 class TestEqualizedOddsPostprocessing(unittest.TestCase):
+    """
+    Test class for the PostprocessingLearner and PostprocessingModel.
+    """
+
     def setUp(self):
         self.data_path_adult = "https://datasets.biolab.si/core/adult.tab"
 
@@ -174,19 +190,18 @@ class TestEqualizedOddsPostprocessing(unittest.TestCase):
         """Check if the adversarial model works"""
         learner = PostprocessingLearner(LogisticRegressionLearner())
         data = Table(self.data_path_adult)
-        model = learner(data[:len(data) // 2])
+        model = learner(data[: len(data) // 2])
         self.assertIsNotNone(model)
 
-        predictions = model(data[len(data) // 2:], ret=Model.ValueProbs )
+        predictions = model(data[len(data) // 2 :], ret=Model.ValueProbs)
         self.assertIsNotNone(predictions)
 
         labels, scores = predictions
 
         self.assertEqual(len(labels), len(scores))
-        self.assertEqual(len(labels), len(data[len(data) // 2:]))
+        self.assertEqual(len(labels), len(data[len(data) // 2 :]))
         self.assertLess(abs(scores.sum(axis=1) - 1).all(), 1e-6)
         self.assertTrue(all(label in [0, 1] for label in labels))
-
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from os import path, walk
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 
 try:
     LONG_DESCRIPTION = open(

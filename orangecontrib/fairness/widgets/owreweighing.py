@@ -1,3 +1,9 @@
+"""
+This module contains the implementation of the Reweighing widget.
+
+This widget applies the reweighing algorithm to a dataset, which adjusts the weights of rows.
+"""
+
 from typing import Optional
 
 from Orange.widgets import gui
@@ -10,21 +16,25 @@ from aif360.algorithms.preprocessing import Reweighing as ReweighingAlgorithm
 from orangecontrib.fairness.widgets.utils import (
     table_to_standard_dataset,
     check_fairness_data,
-    check_for_missing_values
+    check_for_missing_values,
 )
 
 
 class MzCom:
-    """A class used to compute the weights of the rows of a dataset using a allready fitted reweighing algorithm"""
+    """
+    A class used to compute the weights of the rows of a
+    dataset using a already fitted reweighing algorithm
+    """
 
     def __init__(self, model, original_domain=None):
         self.original_domain = original_domain
         self.model = model
 
     def __call__(self, data):
-        # For creating the standard dataset we need to know the encoding the table uses for the class variable
-        # This can be found in the domain and is the same as the order of values of the class variable in the domain
-        # This is why we need to add it back to the domain if it was removed
+        # For creating the standard dataset we need to know the encoding the table uses for
+        # the class variable. This can be found in the domain and is the same as the order
+        # of values of the class variable in the domain. This is why we need to add it back
+        # to the domain if it was removed.
         if not data.domain.class_var:
             data.domain.class_var = self.original_domain.class_var
         data, _, _ = table_to_standard_dataset(data)
@@ -36,7 +46,9 @@ class MzCom:
 
 
 class ReweighingModel:
-    """A class used to create a ReweighingAlgoritm instance, fitting it to the data and returning it"""
+    """
+    A class used to create a ReweighingAlgoritm instance, fitting it to the data and returning it.
+    """
 
     def __call__(self, data):
         (
@@ -51,8 +63,9 @@ class ReweighingModel:
 
 class ReweighingTransform(preprocess.Preprocess):
     """
-    A class used to add a new column/variable to the data with the weights of the rows of the data computed
-    by the fitted reweighing algorithm stored in the MzCom class instance as a compute_value function
+    A class used to add a new column/variable to the data with the weights of
+    the rows of the data computed by the fitted reweighing algorithm stored in
+    the MzCom class instance as a compute_value function.
     """
 
     def __call__(self, data):
@@ -60,7 +73,8 @@ class ReweighingTransform(preprocess.Preprocess):
         weights = ContinuousVariable(
             "weights", compute_value=MzCom(model, original_domain=data.domain)
         )
-        # Alternative for the compute_value: compute_value=lambda data, model=model: transf(data, model)
+        # Alternative for the compute_value:
+        # compute_value=lambda data, model=model: transf(data, model)
 
         # Add the variable "weights" to the domain of the data
         new_data = data.transform(
@@ -80,7 +94,10 @@ class OWReweighing(OWWidget):
     """
 
     name = "Reweighing"
-    description = "Applies the reweighing algorithm to a dataset, which adjusts the weights of rows."
+    description = (
+        "Applies the reweighing algorithm to a dataset, "
+        "which adjusts the weights of rows."
+    )
     icon = "icons/reweighing.svg"
     priority = 20
 
@@ -106,7 +123,11 @@ class OWReweighing(OWWidget):
         box = gui.vBox(self.mainArea, "Info")
         gui.widgetLabel(
             box,
-            "This widget applies the reweighing algorithm to a dataset, which adjusts the weights of rows.\nThe input data must have the additional 'AsFairness' attributes and be without any missing values.",
+            (
+                "This widget applies the reweighing algorithm to a dataset, "
+                "which adjusts the weights of rows.\nThe input data must have "
+                "the additional 'AsFairness' attributes and be without any missing values."
+            ),
         )
 
         self._data: Optional[Table] = None
@@ -126,7 +147,10 @@ class OWReweighing(OWWidget):
         self.apply()
 
     def apply(self):
-        """Fitting the reweighing algorithm to the data and sending the preprocessed data and the preprocessor to the output"""
+        """
+        Fitting the reweighing algorithm to the data and sending the
+        preprocessed data and the preprocessor to the output.
+        """
         if self._data is None:
             return
 

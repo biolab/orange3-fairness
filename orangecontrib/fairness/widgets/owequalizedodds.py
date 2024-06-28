@@ -1,3 +1,10 @@
+"""
+File which contains the OWEqualizedOdds widget.
+
+This widget is used to postprocess a model predictions 
+using a fairness algorithm to satisfy equalized odds.
+"""
+
 from Orange.base import Learner
 from Orange.data import Table
 from Orange.widgets.settings import Setting
@@ -11,19 +18,30 @@ from AnyQt.QtWidgets import QFormLayout
 from AnyQt.QtCore import Qt
 
 from orangecontrib.fairness.modeling.postprocessing import PostprocessingLearner
-from orangecontrib.fairness.widgets.utils import check_fairness_data, check_for_missing_values
+from orangecontrib.fairness.widgets.utils import (
+    check_fairness_data,
+    check_for_missing_values,
+)
 
 
 class InterruptException(Exception):
     """A dummy exception used to interrupt the training process."""
+
     pass
 
+
 class EqualizedOddsRunner:
-    """A class used to run the EqualizedOddsLearner in a separate thread and display progress using the callback."""
+    """
+    A class used to run the EqualizedOddsLearner in a separate
+    thread and display progress using the callback.
+    """
+
     @staticmethod
-    def run(
-        learner: Learner, data: Table, state: TaskState
-    ) -> Model:
+    def run(learner: Learner, data: Table, state: TaskState) -> Model:
+        """
+        Function used to run the EqualizedOddsLearner in a separate
+        thread and display progress using the callback.
+        """
         if data is None:
             return None
 
@@ -37,14 +55,17 @@ class EqualizedOddsRunner:
         return model
 
 
-
-
 class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
     """
-    Widget for postprocessing a model predictions using a fairness algorithm to satisfy equalized odds.
+    Widget for postprocessing a model predictions using a
+    fairness algorithm to satisfy equalized odds.
     """
+
     name = "Equalized Odds Postprocessing"
-    description = "Postprocessing fairness algorithm which changes the predictions of a classifier to satisfy equalized odds."
+    description = (
+        "Postprocessing fairness algorithm which changes the "
+        "predictions of a classifier to satisfy equalized odds."
+    )
     icon = "icons/eq_odds_postprocessing.svg"
     priority = 40
 
@@ -52,7 +73,11 @@ class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
     repeatable = Setting(True)
 
     class Inputs(OWBaseLearner.Inputs):
-        """Inputs for the widget, which are the same as the inputs for the super class plus a learner input."""
+        """
+        Inputs for the widget, which are the same as the inputs
+        for the super class plus a learner input.
+        """
+
         input_learner = Input("Learner", Learner)
 
     def __init__(self):
@@ -88,11 +113,10 @@ class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
         self.cancel()
         super().set_data(data)
 
-
     @Inputs.input_learner
     def set_learner(self, input_learner: Learner):
         """
-        Function which handles the learner input by first canceling the current taks, 
+        Function which handles the learner input by first canceling the current taks,
         storing the learneras a class variable and updating the widget name.
         """
         self.cancel()
@@ -109,10 +133,10 @@ class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
         self.cancel()
         super().set_preprocessor(preprocessor)
 
-
     def create_learner(self):
         """
-        Responsible for creating the postprocessed learner with the input_learner and the preprocessors.
+        Responsible for creating the postprocessed learner with
+        the input_learner and the preprocessors.
         """
         if not self.input_learner:
             return None
@@ -125,12 +149,13 @@ class OWEqualizedOdds(ConcurrentWidgetMixin, OWBaseLearner):
     def handleNewSignals(self):
         if not self.input_learner:
             return
-        self.update_learner() 
+        self.update_learner()
         if self.data is not None:
             self.update_model()
 
     def update_model(self):
-        """Responsible for starting a new thread, fitting the learner and sending the created model to the output"""
+        """Responsible for starting a new thread, fitting the learner
+        and sending the created model to the output"""
         self.cancel()
         if self.data is not None and self.input_learner is not None:
             self.start(EqualizedOddsRunner.run, self.learner, self.data)

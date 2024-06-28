@@ -1,3 +1,7 @@
+"""
+This file contains the tests for the OWDatasetBias widget.
+"""
+
 import unittest
 
 from Orange.data.table import Table
@@ -7,9 +11,15 @@ from orangecontrib.fairness.widgets.owdatasetbias import OWDatasetBias
 
 
 class TestOWDatasetBias(WidgetTest):
+    """
+    Test class for the OWDatasetBias widget.
+    """
+
     def setUp(self) -> None:
         self.data_path_adult = "https://datasets.biolab.si/core/adult.tab"
-        self.incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
+        self.incorrect_input_data_path = (
+            "https://datasets.biolab.si/core/breast-cancer.tab"
+        )
         self.widget = self.create_widget(OWDatasetBias)
 
         self.assertEqual(self.widget.disparate_impact_label.text(), "No data detected.")
@@ -22,7 +32,10 @@ class TestOWDatasetBias(WidgetTest):
         self.assertEqual(self.widget.statistical_parity_difference_label.text(), "")
 
     def test_incorrect_input_data(self):
-        """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
+        """
+        Check that the widget displays an error message when
+        the input data does not have the 'AsFairness' attributes
+        """
         test_data = Table(self.incorrect_input_data_path)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())

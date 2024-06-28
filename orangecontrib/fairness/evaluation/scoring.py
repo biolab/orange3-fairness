@@ -1,3 +1,13 @@
+"""
+This module contains classes for computing fairness scores.
+
+Classes:
+- StatisticalParityDifference
+- EqualOpportunityDifference
+- AverageOddsDifference
+- DisparateImpact
+"""
+
 from abc import abstractmethod
 from Orange.data import DiscreteVariable, ContinuousVariable, Domain
 from Orange.evaluation.scoring import Score
@@ -19,7 +29,12 @@ __all__ = [
 
 
 class FairnessScorer(Score, abstract=True):
-    """Abstract class which will allow fairness scores to be calculated and displayed in certain widgets"""
+    """
+    Abstract class for computing fairness scores.
+
+    Abstract class which will allow fairness scores to be calculated and displayed.
+    Subclasses need to implement the metric method which will return the fairness score.
+    """
 
     class_types = (
         DiscreteVariable,
@@ -28,17 +43,28 @@ class FairnessScorer(Score, abstract=True):
 
     @staticmethod
     def is_compatible(domain: Domain) -> bool:
-        """Checks if the scorer is compatible with the domain of the data. If not the scores will not be computed."""
+        """
+        Checks if the scorer is compatible with the domain of the data.
+        If not the scores will not be computed.
+
+        Args:
+            domain (Domain): The domain of the data.
+        """
         return contains_fairness_attributes(domain)
 
     def compute_score(self, results):
-        """Method that creates a ClassificationMetric object used to compute fairness scores"""
+        """
+        Creates a ClassificationMetric object used to compute fairness scores
+
+        Args:
+            results (Results): The results of the model.
+        """
 
         dataset, privileged_groups, unprivileged_groups = table_to_standard_dataset(
             results.data
         )
 
-        # We need to subset the created dataset so that it will match the shape/order 
+        # We need to subset the created dataset so that it will match the shape/order
         # This is needed when/if some of the rows in the data were used multiple times
         dataset = dataset.subset(results.row_indices)
         dataset_pred = dataset.copy()
@@ -54,12 +80,22 @@ class FairnessScorer(Score, abstract=True):
 
     @abstractmethod
     def metric(self, classification_metric):
-        """Method that needs to be implemented by the subclasses of the FairnessScorer."""
+        """
+        Abstract method that needs to be implemented by subclasses.
+
+        It should return the fairness score.
+
+        Args:
+            classification_metric (ClassificationMetric):
+                The ClassificationMetric object used to compute fairness scores.
+        """
         pass
 
 
 class StatisticalParityDifference(FairnessScorer):
-    """Class for Statistical Parity Difference fairness scoring."""
+    """
+    A class for computing the Statistical Parity Difference fairness score.
+    """
 
     name = "SPD"
     long_name = str(
@@ -76,7 +112,9 @@ class StatisticalParityDifference(FairnessScorer):
 
 
 class EqualOpportunityDifference(FairnessScorer):
-    """Class for Equal Opportunity Difference fairness scoring."""
+    """
+    A class for computing the Equal Opportunity Difference fairness score.
+    """
 
     name = "EOD"
     long_name = str(
@@ -94,7 +132,9 @@ class EqualOpportunityDifference(FairnessScorer):
 
 
 class AverageOddsDifference(FairnessScorer):
-    """Class for Average Odds Difference fairness scoring."""
+    """
+    A class for computing the Average Odds Difference fairness score.
+    """
 
     name = "AOD"
     long_name = str(
@@ -114,7 +154,9 @@ class AverageOddsDifference(FairnessScorer):
 
 
 class DisparateImpact(FairnessScorer):
-    """Class for Disparate Impact fairness scoring."""
+    """
+    A class for computing the Disparate Impact fairness score.
+    """
 
     name = "DI"
     long_name = str(
@@ -130,8 +172,8 @@ class DisparateImpact(FairnessScorer):
     )
 
     # TODO: When using randomize, models sometimes predict the same class for all instances
-    # This can lead to division by zero in the Disparate Impact score (and untrue results for the other scores)
+    # This can lead to division by zero in the Disparate Impact score
+    # (and untrue results for the other scores)
     # What is the best way to handle this?
     def metric(self, classification_metric):
         return classification_metric.disparate_impact()
-            

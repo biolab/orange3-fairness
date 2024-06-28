@@ -1,3 +1,9 @@
+"""
+This module contains the PostprocessingModel and PostprocessingLearner classes 
+
+These are used to create and fit the model and postprocessor and create the PostprocessingModel.
+"""
+
 import numpy as np
 
 from Orange.base import Learner, Model
@@ -14,7 +20,16 @@ from orangecontrib.fairness.widgets.utils import (
 
 
 class PostprocessingModel(Model):
-    """Model created and fitted by the PostprocessingLearner, which is used to predict on new data and to postprocess the predictions"""
+    """
+    Model created and fitted by the PostprocessingLearner
+
+    Used to predict on new data and to postprocess the predictions
+
+    Attributes:
+    - model (Model): The model used to make predictions
+    - postprocessor (EqOddsPostprocessing): The postprocessor used to postprocess the predictions
+    """
+
     def __init__(self, model, postprocessor):
         super().__init__()
         self.model = model
@@ -22,21 +37,26 @@ class PostprocessingModel(Model):
         self.params = vars()
 
     def predict(self, data):
-        """Function used to preprocess, predict and postprocess on new data"""
+        """
+        Method used to preprocess, predict and postprocess on new data.
+
+        First we get the predictions from the model, then we use the
+        postprocessor on the predictions, and finally we create dummy scores
+        which are used to aproximate the scores of the postprocessed predictions.
+        """
         if isinstance(data, Table):
-            # Get the predictions and scores from the model (we don't need the scores because they are irrelevant after postprocessing)
             predictions, _ = self.model(data, ret=Model.ValueProbs)
 
             standard_dataset, _, _ = table_to_standard_dataset(data)
             standard_dataset_pred = standard_dataset.copy(deepcopy=True)
             standard_dataset_pred.labels = predictions.reshape(-1, 1)
 
-            # Postprocess the predictions
             standard_dataset_pred_transf = self.postprocessor.predict(
                 standard_dataset_pred
             )
 
-            # Create dummy scores from predictions (if the predictions are 0 or 1, the scores will be 0 or 1)
+            # Create dummy scores from predictions
+            # (if the predictions are 0 or 1, the scores will be 0 or 1)
             scores = np.zeros((len(standard_dataset_pred_transf.labels), 2))
             scores[:, 1] = standard_dataset_pred_transf.labels.ravel()
             scores[:, 0] = 1 - standard_dataset_pred_transf.labels.ravel()
@@ -54,7 +74,18 @@ class PostprocessingModel(Model):
 
 
 class PostprocessingLearner(Learner):
-    """Learner subclass used to create and fit the model and postprocessor and create the PostprocessingModel"""
+    """
+    Subclass used to create and fit the model and postprocessor and create the PostprocessingModel
+
+    Attributes:
+    - learner (Learner): The learner used to create the model
+    - preprocessors (list): The preprocessors used to preprocess the data
+    - repeatable (bool): If the model should be repeatable
+    - callback (function): The callback used to interrupt the widget
+    - seed (int): The seed used to make the model repeatable
+    - params (dict): The parameters used in the __call__ method
+    """
+
     __returns__ = PostprocessingModel
 
     def __init__(self, learner, preprocessors=None, repeatable=None):
@@ -65,7 +96,9 @@ class PostprocessingLearner(Learner):
         self.params = vars()
 
     def incompatibility_reason(self, domain):
-        """Function used to check if the domain contains the fairness attributes"""
+        """
+        Method used to check if the domain contains the fairness attributes
+        """
         if not contains_fairness_attributes(domain):
             return MISSING_FAIRNESS_ATTRIBUTES
 
@@ -85,21 +118,24 @@ class PostprocessingLearner(Learner):
             return self.fit(data)
 
     def fit(self, data):
-        """Function used to preprocess the data, fit the model and the postprocessor"""
+        """
+        Method used to preprocess the data, fit the model and the postprocessor
+        """
         if isinstance(data, Table):
             if not contains_fairness_attributes(data.domain):
                 raise ValueError(MISSING_FAIRNESS_ATTRIBUTES)
-            
+
             # Fit the model to the data
-            # the callback is currently not used for progress but to allow the user to interrupt the widget while the model is training
+            # the callback is currently not used for progress but to allow
+            # the user to interrupt the widget while the model is training
             model = self.learner(data, self.callback)
 
-            # Use cross validation to get the predictions, we do this to avoid having to use 
+            # Use cross validation to get the predictions, we do this to avoid having to use
             # a train/validation split to get the predictions required to fit the postprocessor
             cv = CrossValidation(k=5)
-            # Including the callback in the cross validation will allow the user to 
+            # Including the callback in the cross validation will allow the user to
             # interrupt the widget when it's in the cross validation phase
-            res = cv(data, [self.learner], callback=self.callback) 
+            res = cv(data, [self.learner], callback=self.callback)
             predictions = res.predicted[0]
             row_indices = res.row_indices
             predictions = predictions[np.argsort(row_indices)]
@@ -126,7 +162,9 @@ class PostprocessingLearner(Learner):
 
     def __call__(self, data, progress_callback=None):
         self.callback = progress_callback
-        # self.learner.callback = progress_callback by adding this line, the progress will "work" for learners with the .callback attribute but it may cause problems for learners without it
+        # By adding this line, the progress will "work" for learners with the
+        # .callback attribute but it may cause problems for learners without it
+        # self.learner.callback = progress_callback
         model = super().__call__(data)
         model.params = self.params
         return model

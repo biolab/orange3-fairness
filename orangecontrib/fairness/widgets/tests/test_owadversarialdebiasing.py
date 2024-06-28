@@ -1,3 +1,7 @@
+"""
+This file contains the tests for the OWAdversarialDebiasing widget.
+"""
+
 import unittest
 
 from Orange.evaluation import CrossValidation, AUC, CA
@@ -8,10 +12,19 @@ from Orange.data import Table
 from orangecontrib.fairness.widgets.owadversarialdebiasing import OWAdversarialDebiasing
 from orangecontrib.fairness.modeling.adversarial import AdversarialDebiasingLearner
 
+
 class TestOWAdversarialDebiasing(WidgetTest):
+    """
+    Test class for the OWAdversarialDebiasing widget.
+    """
+
     def setUp(self):
-        self.data_path_compas = "https://datasets.biolab.si/core/compas-scores-two-years.tab"
-        self.incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
+        self.data_path_compas = (
+            "https://datasets.biolab.si/core/compas-scores-two-years.tab"
+        )
+        self.incorrect_input_data_path = (
+            "https://datasets.biolab.si/core/breast-cancer.tab"
+        )
         self.widget = self.create_widget(OWAdversarialDebiasing)
 
     def test_no_data(self):
@@ -35,7 +48,10 @@ class TestOWAdversarialDebiasing(WidgetTest):
         self.assertEqual(self.widget.repeatable, True)
 
     def test_incorrect_input_data(self):
-        """Check that the widget displays an error message when the input data does not have the 'AsFairness' attributes"""
+        """
+        Check that the widget displays an error message when the
+        input data does not have the 'AsFairness' attributes
+        """
         test_data = Table(self.incorrect_input_data_path)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
@@ -58,8 +74,11 @@ class TestOWAdversarialDebiasing(WidgetTest):
         self.assertIsNotNone(model)
 
 
-
 class TestAdversarialDebiasing(unittest.TestCase):
+    """
+    Test class for the AdversarialDebiasingLearner and AdversarialDebiasingModel.
+    """
+
     def setUp(self):
         self.data_path_german = "https://datasets.biolab.si/core/german-credit-data.tab"
 
@@ -78,24 +97,26 @@ class TestAdversarialDebiasing(unittest.TestCase):
         """Check if the adversarial model works"""
         learner = AdversarialDebiasingLearner(num_epochs=20, seed=42)
         data = Table(self.data_path_german)
-        model = learner(data[:len(data) // 2])
+        model = learner(data[: len(data) // 2])
         self.assertIsNotNone(model)
 
-        predictions = model(data[len(data) // 2:], ret=Model.ValueProbs )
+        predictions = model(data[len(data) // 2 :], ret=Model.ValueProbs)
         self.assertIsNotNone(predictions)
 
         labels, scores = predictions
 
         self.assertEqual(len(labels), len(scores))
-        self.assertEqual(len(labels), len(data[len(data) // 2:]))
+        self.assertEqual(len(labels), len(data[len(data) // 2 :]))
         self.assertLess(abs(scores.sum(axis=1) - 1).all(), 1e-6)
         self.assertTrue(all(label in [0, 1] for label in labels))
 
 
 class TestCallbackSession(unittest.TestCase):
     """
-    In the adversarial.py file create a Subclass of tensorflow session with callback functionality for progress tracking and displaying.
-    This class should be tested to ensure that the tf.Session has not been modified in a way that breaks the functionality of the widget.
+    In the adversarial.py file create a Subclass of tensorflow session with callback
+    functionality for progress tracking and displaying. This class should be tested to
+    ensure that the tf.Session has not been modified in a way that breaks the functionality
+    of the widget.
     """
 
     def setUp(self):
@@ -110,6 +131,7 @@ class TestCallbackSession(unittest.TestCase):
         self.last_received_progress = progress
 
     def test_callback_with_learner(self):
+        """Test the callback function with the AdversarialDebiasingLearner."""
         # Define the learner
         learner = AdversarialDebiasingLearner(num_epochs=20, batch_size=128)
         expected_total_runs = learner._calculate_total_runs(self.data)

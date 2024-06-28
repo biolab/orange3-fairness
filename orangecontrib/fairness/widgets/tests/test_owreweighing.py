@@ -1,3 +1,7 @@
+"""
+This file contains the tests for the OWReweighing widget.
+"""
+
 import unittest
 import numpy as np
 
@@ -6,18 +10,29 @@ from Orange.preprocess.preprocess import PreprocessorList
 from Orange.data import Table
 
 from orangecontrib.fairness.widgets.owreweighing import OWReweighing
-from orangecontrib.fairness.widgets.owweightedlogisticregression import OWWeightedLogisticRegression
+from orangecontrib.fairness.widgets.owweightedlogisticregression import (
+    OWWeightedLogisticRegression,
+)
 from orangecontrib.fairness.widgets.owcombinepreprocessors import OWCombinePreprocessors
 
 
-
 class TestOWReweighing(WidgetTest):
+    """
+    Test class for the OWReweighing widget.
+    """
+
     def setUp(self) -> None:
-        self.data_path_adult = "https://datasets.biolab.si/core/compas-scores-two-years.tab"
-        self.incorrect_input_data_path = "https://datasets.biolab.si/core/breast-cancer.tab"
+        self.data_path_adult = (
+            "https://datasets.biolab.si/core/compas-scores-two-years.tab"
+        )
+        self.incorrect_input_data_path = (
+            "https://datasets.biolab.si/core/breast-cancer.tab"
+        )
         self.widget = self.create_widget(OWReweighing)
         self.combine_preprocessors = self.create_widget(OWCombinePreprocessors)
-        self.weighted_logistic_regression = self.create_widget(OWWeightedLogisticRegression)
+        self.weighted_logistic_regression = self.create_widget(
+            OWWeightedLogisticRegression
+        )
 
     def test_no_data(self):
         """Check that the widget doesn't crash on empty data"""
@@ -26,7 +41,10 @@ class TestOWReweighing(WidgetTest):
         self.assertIsNotNone(self.get_output(self.widget.Outputs.preprocessor))
 
     def test_incorrect_input_data(self):
-        """Check that the widget displays an error message when the input data does not have the fairness attributes"""
+        """
+        Check that the widget displays an error message when
+        the input data does not have the fairness attributes
+        """
         test_data = Table(self.incorrect_input_data_path)
         self.send_signal(self.widget.Inputs.data, test_data)
         self.assertTrue(self.widget.Error.missing_fairness_data.is_shown())
@@ -53,10 +71,16 @@ class TestOWReweighing(WidgetTest):
         first_preprocessor = self.get_output(self.widget.Outputs.preprocessor)
         second_preprocessor = self.get_output(self.widget.Outputs.preprocessor)
 
-        self.send_signal(self.combine_preprocessors.Inputs.first_preprocessor, first_preprocessor)
-        self.send_signal(self.combine_preprocessors.Inputs.second_preprocessor, second_preprocessor)
+        self.send_signal(
+            self.combine_preprocessors.Inputs.first_preprocessor, first_preprocessor
+        )
+        self.send_signal(
+            self.combine_preprocessors.Inputs.second_preprocessor, second_preprocessor
+        )
 
-        combined_preprocessor = self.get_output(self.combine_preprocessors.Outputs.preprocessor)
+        combined_preprocessor = self.get_output(
+            self.combine_preprocessors.Outputs.preprocessor
+        )
 
         # Check that the output is not None
         self.assertIsNotNone(combined_preprocessor)
@@ -67,9 +91,11 @@ class TestOWReweighing(WidgetTest):
         # Check that there are two preprocessors in the list
         self.assertEqual(len(combined_preprocessor.preprocessors), 2)
 
-
     def test_with_weighted_logistic_regression(self):
-        """Check that the predictions of logistic regression on the original data and the preprocessed data are different"""
+        """
+        Check that the predictions of logistic regression on
+        the original data and the preprocessed data are different
+        """
 
         test_data = Table(self.data_path_adult)
         self.send_signal(self.widget.Inputs.data, test_data)
@@ -83,15 +109,18 @@ class TestOWReweighing(WidgetTest):
         normal_model = self.get_output(self.weighted_logistic_regression.Outputs.model)
 
         # Train a model on the preprocessed data
-        self.send_signal(self.weighted_logistic_regression.Inputs.data, preprocessed_data)
+        self.send_signal(
+            self.weighted_logistic_regression.Inputs.data, preprocessed_data
+        )
         self.wait_until_finished(self.weighted_logistic_regression)
-        preprocessed_model = self.get_output(self.weighted_logistic_regression.Outputs.model)
+        preprocessed_model = self.get_output(
+            self.weighted_logistic_regression.Outputs.model
+        )
 
         # Check that the predictions of the two models are different
         self.assertFalse(
             np.array_equal(
-                normal_model(test_data),
-                preprocessed_model(preprocessed_data)
+                normal_model(test_data), preprocessed_model(preprocessed_data)
             ),
             "Preprocessed predictions should not equal normal predictions",
         )

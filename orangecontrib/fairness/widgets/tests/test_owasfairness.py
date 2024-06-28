@@ -1,3 +1,7 @@
+"""
+This file contains the tests for the OWAsFairness widget.
+"""
+
 import unittest
 
 from Orange.data.table import Table
@@ -9,8 +13,11 @@ from orangecontrib.fairness.widgets.owasfairness import OWAsFairness
 from orangecontrib.fairness.widgets.tests.utils import fairness_attributes
 
 
-
 class TestOWAsFairness(WidgetTest):
+    """
+    Test class for the OWAsFairness widget.
+    """
+
     def setUp(self) -> None:
         self.widget = self.create_widget(OWAsFairness)
         self.data_path_adult = "https://datasets.biolab.si/core/adult.tab"
@@ -36,37 +43,54 @@ class TestOWAsFairness(WidgetTest):
         )
 
     def test_display_default(self):
-        """Check that the widget automatically displays the default fairness attributes if the input data contains them"""
+        """
+        Check that the widget automatically displays the default
+        fairness attributes if the input data contains them
+        """
         test_data = Table(self.data_path_adult)
         self.send_signal(
             self.widget.Inputs.data,
             test_data,
         )
 
-        favorable_class_value, protected_attribute, privileged_pa_values = fairness_attributes(test_data.domain)
+        favorable_class_value, protected_attribute, privileged_pa_values = (
+            fairness_attributes(test_data.domain)
+        )
 
-        self.assertEqual(self.widget.controls.favorable_class_value.currentText(), favorable_class_value)
-        
-        self.assertEqual(self.widget.controls.protected_attribute.currentText(), protected_attribute.name)
+        self.assertEqual(
+            self.widget.controls.favorable_class_value.currentText(),
+            favorable_class_value,
+        )
 
-        selected_indexes = self.widget.controls.privileged_pa_values.selectionModel().selectedRows()
+        self.assertEqual(
+            self.widget.controls.protected_attribute.currentText(),
+            protected_attribute.name,
+        )
+
+        selected_indexes = (
+            self.widget.controls.privileged_pa_values.selectionModel().selectedRows()
+        )
         model = self.widget.controls.privileged_pa_values.model()
         selected_values = [model.data(index) for index in selected_indexes]
         self.assertEqual(selected_values, privileged_pa_values)
 
     def test_select_default(self):
-        """Check that the widget automatically selects the default fairness attributes if the input data contains them"""
+        """
+        Check that the widget automatically selects the default
+        fairness attributes if the input data contains them
+        """
         test_data = Table(self.data_path_adult)
         self.send_signal(
             self.widget.Inputs.data,
             test_data,
         )
 
-        favorable_class_value, protected_attribute, privileged_pa_values = fairness_attributes(test_data.domain)
+        favorable_class_value, protected_attribute, privileged_pa_values = (
+            fairness_attributes(test_data.domain)
+        )
         self.assertEqual(self.widget.favorable_class_value, favorable_class_value)
         self.assertEqual(self.widget.protected_attribute.name, protected_attribute.name)
         self.assertEqual(self.widget.privileged_pa_values, privileged_pa_values)
-
 
     def test_selection(self):
         """Check that the selection of fairness attributes works properly"""
@@ -78,15 +102,23 @@ class TestOWAsFairness(WidgetTest):
 
         # Test that the selection of favorable class value works
         simulate.combobox_activate_index(self.widget.controls.favorable_class_value, 0)
-        self.assertEqual(self.widget.favorable_class_value, self.widget.controls.favorable_class_value.currentText())
+        self.assertEqual(
+            self.widget.favorable_class_value,
+            self.widget.controls.favorable_class_value.currentText(),
+        )
 
         # Test that the selection of protected attribute works
         simulate.combobox_activate_index(self.widget.controls.protected_attribute, 0)
-        self.assertEqual(self.widget.protected_attribute.name, self.widget.controls.protected_attribute.currentText())
+        self.assertEqual(
+            self.widget.protected_attribute.name,
+            self.widget.controls.protected_attribute.currentText(),
+        )
 
         # Test that the selection of privileged protected attribute values works
         select_rows(self.widget.controls.privileged_pa_values, [1])
-        selected_indexes = self.widget.controls.privileged_pa_values.selectionModel().selectedRows()
+        selected_indexes = (
+            self.widget.controls.privileged_pa_values.selectionModel().selectedRows()
+        )
 
         model = self.widget.controls.privileged_pa_values.model()
         selected_values = [model.data(index) for index in selected_indexes]
@@ -110,11 +142,13 @@ class TestOWAsFairness(WidgetTest):
         output_data = self.get_output(self.widget.Outputs.data)
 
         self.assertTrue(output_data is not None)
-        self.assertTrue("favorable_class_value" in output_data.domain.class_var.attributes)
+        self.assertTrue(
+            "favorable_class_value" in output_data.domain.class_var.attributes
+        )
         contains_pa_values = False
         for attr in output_data.domain.attributes:
             if "privileged_pa_values" in attr.attributes:
-                        contains_pa_values = True
+                contains_pa_values = True
         self.assertTrue(contains_pa_values)
 
 

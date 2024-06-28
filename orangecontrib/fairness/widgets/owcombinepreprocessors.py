@@ -1,3 +1,10 @@
+"""
+This module contains the implementation of the Combine Preprocessors widget.
+
+This widget allows the user to combine two preprocessors into 
+one so it can be used as input for other widgets.
+"""
+
 from typing import Optional
 
 from Orange.widgets import gui
@@ -6,7 +13,9 @@ from Orange.preprocess.preprocess import Preprocess, PreprocessorList
 
 
 class OWCombinePreprocessors(OWWidget):
-    """Widget for combining 2 preprocessors into one so it can be used as input for other widgets."""
+    """
+    Widget for combining 2 preprocessors into one so it can be used as input for other widgets.
+    """
 
     name = "Combine Preprocessors"
     description = "Combine multiple preprocessors into one."
@@ -37,7 +46,10 @@ class OWCombinePreprocessors(OWWidget):
         box = gui.vBox(self.mainArea, "Info")
         gui.widgetLabel(
             box,
-            "This widgets allows you to combine two preprocessors into one and use it as input for other widgets.",
+            (
+                "This widgets allows you to combine two preprocessors "
+                "into one and use it as input for other widgets."
+            ),
         )
 
     @Inputs.first_preprocessor

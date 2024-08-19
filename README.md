@@ -19,7 +19,7 @@ different types of biases in the data and the predictions of machine learning mo
 
 1. [Download](https://orangedatamining.com/download/) the latest Orange release from
 our website.
-2. Install the the fairness add-on: head to
+2. Install the fairness add-on: head to
 `Options -> Add-ons...` in the menu bar. From the list of add-ons, select Fairness and confirm.
 This will downlaod and install the add-on and its dependencies.
 

@@ -104,7 +104,6 @@ class PostprocessingLearner(Learner):
 
     # Fit storage and fit functions were modified to use a Table/Storage object
     # This is because it's the easiest way to get the domain, and meta attributes
-    # TODO: Should I use the X,Y,W format instead of the table format ? (Same for the model)
     def fit_storage(self, data):
         if isinstance(data, Table):
             self.fit(data)

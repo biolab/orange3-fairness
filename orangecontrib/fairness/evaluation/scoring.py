@@ -99,8 +99,8 @@ class StatisticalParityDifference(FairnessScorer):
 
     name = "SPD"
     long_name = str(
-        "<p>Statistical Parity Difference (SPD): Measures the difference in ratios of "
-        "favorable outcomes. An ideal value is 0.0.</p>"
+        "<p>Statistical Parity Difference (SPD): The difference in favorable "
+        "outcomes proportions between groups. An ideal value is 0.0.</p>"
         "<ul>"
         "<li>SPD &lt; 0: The privileged group has a higher rate of favorable outcomes.</li>"
         "<li>SPD &gt; 0: The privileged group has a lower rate of favorable outcomes.</li>"
@@ -118,9 +118,8 @@ class EqualOpportunityDifference(FairnessScorer):
 
     name = "EOD"
     long_name = str(
-        "<p>Equal Opportunity Difference (EOD): It measures the difference in "
-        "true positive rates. An ideal value is 0.0, indicating the difference "
-        "in true positive rates is the same for both groups.</p>"
+        "<p>Equal Opportunity Difference (EOD): The difference in true positive rates between "
+        "groups. An ideal value is 0.0 meaning both groups have the same true positive rate.</p>"
         "<ul>"
         "<li>EOD &lt; 0: The privileged group has a higher true positive rate.</li>"
         "<li>EOD &gt; 0: The privileged group has a lower true positive rate.</li>"
@@ -138,11 +137,9 @@ class AverageOddsDifference(FairnessScorer):
 
     name = "AOD"
     long_name = str(
-        "<p>Average Odds Difference (AOD): This metric calculates the average difference "
-        "between the true positive rates (correctly predicting a positive outcome) and false "
-        "positive rates (incorrectly predicting a positive outcome) for both the privileged "
-        "and unprivileged groups. A value of 0.0 indicates equal rates for both groups, "
-        "signifying fairness.</p>"
+        "<p>Average Odds Difference (AOD): The average of the differences in true "
+        "and false positive rates between privileged and unprivileged groups. "
+        "A value of 0.0 indicates equal rates for both groups.</p>"
         "<ul>"
         "<li>AOD &lt; 0: Indicates bias in favor of the privileged group.</li>"
         "<li>AOD &gt; 0: Indicates bias against the privileged group.</li>"
@@ -160,20 +157,17 @@ class DisparateImpact(FairnessScorer):
 
     name = "DI"
     long_name = str(
-        "<p>Disparate Impact (DI): The ratio of ratios of favorable outcomes for an unprivileged "
-        "group to that of the privileged group. An ideal value of 1.0 means the ratio is "
-        "the same for both groups.</p>"
+        "<p>Disparate Impact (DI) is the ratio of favorable outcome "
+        "proportions between an unprivileged and privileged group. "
+        "Value of 1.0 indicates that the ratio is equal for both groups.</p>"
         "<ul>"
-        "<li>DI &lt; 1.0: The privileged group receives favorable outcomes at a higher rate "
-        "than the unprivileged group.</li>"
-        "<li>DI &gt; 1.0: The privileged group receives favorable outcomes at a lower rate "
-        "than the unprivileged group.</li>"
+        "<li>DI &lt; 1.0: The privileged group has a higher rate of favorable outcomes.</li>"
+        "<li>DI &gt; 1.0: The privileged group has a lower rate of favorable outcomes.</li>"
         "</ul>"
     )
 
     # TODO: When using randomize, models sometimes predict the same class for all instances
     # This can lead to division by zero in the Disparate Impact score
-    # (and untrue results for the other scores)
-    # What is the best way to handle this?
+    # and untrue results for the other scores.
     def metric(self, classification_metric):
         return classification_metric.disparate_impact()

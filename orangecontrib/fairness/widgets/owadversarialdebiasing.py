@@ -72,6 +72,8 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     icon = "icons/adversarial_debiasing.svg"
     priority = 30
 
+    resizing_enabled = True
+
     class Inputs(OWBaseLearner.Inputs):
         """Inputs for the widgets, which are the same as for the super class (Data, Preprocessor)"""
 
@@ -112,7 +114,6 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     )
 
     # We define the settings we want to use
-    # TODO: Should i use context/domain settings?
     hidden_layers_neurons = Setting(100)
     number_of_epochs = Setting(50)
     batch_size = Setting(128)

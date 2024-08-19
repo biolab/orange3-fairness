@@ -309,7 +309,7 @@ def table_to_standard_dataset(data) -> None:
         data = Impute()(data)
 
     xdf, ydf, mdf = data.to_pandas_dfs()
-    # Merge xdf and ydf TODO: Check if I need to merge mdf
+    # Merge xdf and ydf (currently not merging mdf because it is not used)
     # This dataframe consists of all the data, the categorical variables values are
     # represented with the index of the value in domain[attribute].values
     df = ydf.merge(xdf, left_index=True, right_index=True)

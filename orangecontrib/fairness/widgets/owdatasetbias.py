@@ -37,6 +37,7 @@ class OWDatasetBias(OWWidget):
 
     want_control_area = False
     resizing_enabled = False
+    resizing_enabled = True
 
     class Inputs:
         """Input for the widget - dataset."""
@@ -74,26 +75,25 @@ class OWDatasetBias(OWWidget):
         disparate_impact = dataset_metric.disparate_impact()
         statistical_parity_difference = dataset_metric.statistical_parity_difference()
         self.disparate_impact_label.setText(
-            f"Disparate Impact (ideal = 1): {round(disparate_impact, 3)}"
+            f"Disparate Impact (ideal = 1): {round(disparate_impact, 3):.3f}"
         )
         self.disparate_impact_label.setToolTip(
-            "<p>Disparate Impact (DI): Measures the ratio of the ratios of favorable class "
-            "values for an unprivileged group to that of the privileged group. An ideal value "
-            "of 1.0 means the ratio of favorable class values is the same for both groups.</p>"
+            "<p>Disparate Impact (DI) is the ratio of favorable outcome "
+            "proportions between an unprivileged and privileged group. "
+            "Value of 1.0 indicates that the ratio is equal for both groups.</p>"
             "<ul>"
-            "<li>DI &lt; 1.0: The privileged group has a higher percentage of favorable class values.</li>"
-            "<li>DI &gt; 1.0: The privileged group has a lower percentage of favorable class values.</li>"
+            "<li>DI &lt; 1.0: The privileged group has a higher rate of favorable outcomes.</li>"
+            "<li>DI &gt; 1.0: The privileged group has a lower rate of favorable outcomes.</li>"
             "</ul>"
         )
         self.statistical_parity_difference_label.setText(
-            f"Statistical Parity Difference (ideal = 0): {round(statistical_parity_difference, 3)}"
+            f"Statistical Parity Difference (ideal = 0): {round(statistical_parity_difference, 3):.3f}"
         )
         self.statistical_parity_difference_label.setToolTip(
-            "<p>Statistical Parity Difference (SPD): Measures the difference in ratios of "
-            "favorable class values between the unprivileged and the privileged groups. An "
-            "ideal value for this metric is 0.</p>"
+            "<p>Statistical Parity Difference (SPD): The difference in favorable "
+            "outcomes proportions between groups. An ideal value is 0.0.</p>"
             "<ul>"
-            "<li>SPD &lt; 0: The privileged group has a higher percentage of favorable class values.</li>"
-            "<li>SPD &gt; 0: The privileged group has a lower percentage of favorable class values.</li>"
+            "<li>SPD &lt; 0: The privileged group has a higher rate of favorable outcomes.</li>"
+            "<li>SPD &gt; 0: The privileged group has a lower rate of favorable outcomes.</li>"
             "</ul>"
         )

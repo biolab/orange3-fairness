@@ -44,7 +44,7 @@ To register this add-on with Orange, but keep the code in the development direct
     pip install -e .
 
 
-(For developers) To run Orange from the terminal, use
+To run Orange from the terminal, use
 
     orange-canvas
 

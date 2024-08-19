@@ -23,6 +23,10 @@ our website.
 `Options -> Add-ons...` in the menu bar. From the list of add-ons, select Fairness and confirm.
 This will downlaod and install the add-on and its dependencies.
 
+#  Usage
+
+After the installation, the widget from this add-on is registered with Orange. To use it, run Orange.
+The new widget appears in the toolbox bar under the section Fairness.
 
 # For developers
 
@@ -40,11 +44,6 @@ To register this add-on with Orange, but keep the code in the development direct
     pip install -e .
 
 
-#  Usage
-
-After the installation, the widget from this add-on is registered with Orange. To use it, run Orange.
-The new widget appears in the toolbox bar under the section Fairness.
-
 (For developers) To run Orange from the terminal, use
 
     orange-canvas
@@ -52,4 +51,3 @@ The new widget appears in the toolbox bar under the section Fairness.
 or
 
     python -m Orange.canvas
-

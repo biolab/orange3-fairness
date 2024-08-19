@@ -15,19 +15,24 @@ It provides extensions for fairness-aware AI, which includes algorithms for dete
 different types of biases in the data and the predictions of machine learning models. 
 
 
-# Easy installation
+# Installation
 
 1. [Download](https://orangedatamining.com/download/) the latest Orange release from
 our website.
 2. Install the the fairness add-on: head to
-`Options -> Add-ons...` in the menu bar. From the list of add-ons, select Fairness and confirm the installation.
+`Options -> Add-ons...` in the menu bar. From the list of add-ons, select Fairness and confirm.
+This will downlaod and install the add-on and its dependencies.
+
 
 # For developers
 
+## Installing from downloaded code
 
 If you would like to install from cloned git repository, run
 
     pip install .
+
+## Installing in editable mode
 
 To register this add-on with Orange, but keep the code in the development directory
 (do not copy it to Python's site-packages directory), run
@@ -35,10 +40,12 @@ To register this add-on with Orange, but keep the code in the development direct
     pip install -e .
 
 
-###  Usage
+#  Usage
 
-After the installation, the widget from this add-on is registered with Orange. To run Orange from the terminal,
-use
+After the installation, the widget from this add-on is registered with Orange. To use it, run Orange.
+The new widget appears in the toolbox bar under the section Fairness.
+
+(For developers) To run Orange from the terminal, use
 
     orange-canvas
 
@@ -46,5 +53,3 @@ or
 
     python -m Orange.canvas
 
-The new widget appears in the toolbox bar under the section Fairness.
-Starting up for the first time may take a while.

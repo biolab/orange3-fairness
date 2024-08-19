@@ -28,15 +28,15 @@ This will downlaod and install the add-on and its dependencies.
 After the installation, the widget from this add-on is registered with Orange. To use it, run Orange.
 The new widget appears in the toolbox bar under the section Fairness.
 
-For an introduction to this add-on, see the following YouTube playlist:
+For an introduction to Orange, see the following YouTube playlist:
 
 * [Intro to Data Science](https://www.youtube.com/watch?v=H1ibqB_cvlE&list=PLmNPvQr9Tf-b_SuBdoRsuNhTmaHJ0eKab) - introduces data analysis with Orange
 
-For more, see the following:
+Then, see the following for more on using widgets from the Fairness add-on:
 
-* [Orange widget catalog](https://orange.biolab.si/toolbox/) - Orange widgets documentation
 * [Fairness add-on documentation](https://orange3-fairness.readthedocs.io/) -  documentation for Fairness widgets
 * [Orange blog series on Fairness](https://orangedatamining.com/blog/?tag=fairness)
+* [Orange widget catalog](https://orange.biolab.si/toolbox/) - Orange widgets documentation
 
 
 # For developers

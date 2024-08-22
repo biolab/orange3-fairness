@@ -72,8 +72,6 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
     icon = "icons/adversarial_debiasing.svg"
     priority = 30
 
-    resizing_enabled = True
-
     class Inputs(OWBaseLearner.Inputs):
         """Inputs for the widgets, which are the same as for the super class (Data, Preprocessor)"""
 
@@ -246,50 +244,12 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
 
         installable = Installable(
             name="tensorflow",
-            version="2.15.0",
+            version="2.17.0",
             summary="TensorFlow is an open source machine learning framework for everyone.",
             description="[![Python](https://img.shields.io/pypi/pyversions/tensorflow.svg?style=plastic)](https://badge.fury.io/py/tensorflow)\n[![PyPI](https://badge.fury.io/py/tensorflow.svg)](https://badge.fury.io/py/tensorflow)\n\nTensorFlow is an open source software library for high performance numerical\ncomputation. Its flexible architecture allows easy deployment of computation\nacross a variety of platforms (CPUs, GPUs, TPUs), and from desktops to clusters\nof servers to mobile and edge devices.\n\nOriginally developed by researchers and engineers from the Google Brain team\nwithin Google's AI organization, it comes with strong support for machine\nlearning and deep learning and the flexible numerical computation core is used\nacross many other scientific domains. TensorFlow is licensed under [Apache\n2.0](https://github.com/tensorflow/tensorflow/blob/master/LICENSE).\n",
             package_url="https://pypi.org/project/tensorflow/",
             release_urls=[],
-            requirements=[
-                "absl-py (>=1.0.0)",
-                "astunparse (>=1.6.0)",
-                "flatbuffers (>=23.5.26)",
-                "gast (!=0.5.0,!=0.5.1,!=0.5.2,>=0.2.1)",
-                "google-pasta (>=0.1.1)",
-                "h5py (>=2.9.0)",
-                "libclang (>=13.0.0)",
-                "ml-dtypes (~=0.2.0)",
-                "numpy (<2.0.0,>=1.23.5)",
-                "opt-einsum (>=2.3.2)",
-                "packaging",
-                "protobuf (!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<5.0.0dev,>=3.20.3)",
-                "setuptools",
-                "six (>=1.12.0)",
-                "termcolor (>=1.1.0)",
-                "typing-extensions (>=3.6.6)",
-                "wrapt (<1.15,>=1.11.0)",
-                "tensorflow-io-gcs-filesystem (>=0.23.1)",
-                "grpcio (<2.0,>=1.24.3)",
-                "tensorboard (<2.16,>=2.15)",
-                "tensorflow-estimator (<2.16,>=2.15.0)",
-                "keras (<2.16,>=2.15.0)",
-                "nvidia-cublas-cu12 (==12.2.5.6) ; extra == 'and-cuda'",
-                "nvidia-cuda-cupti-cu12 (==12.2.142) ; extra == 'and-cuda'",
-                "nvidia-cuda-nvcc-cu12 (==12.2.140) ; extra == 'and-cuda'",
-                "nvidia-cuda-nvrtc-cu12 (==12.2.140) ; extra == 'and-cuda'",
-                "nvidia-cuda-runtime-cu12 (==12.2.140) ; extra == 'and-cuda'",
-                "nvidia-cudnn-cu12 (==8.9.4.25) ; extra == 'and-cuda'",
-                "nvidia-cufft-cu12 (==11.0.8.103) ; extra == 'and-cuda'",
-                "nvidia-curand-cu12 (==10.3.3.141) ; extra == 'and-cuda'",
-                "nvidia-cusolver-cu12 (==11.5.2.141) ; extra == 'and-cuda'",
-                "nvidia-cusparse-cu12 (==12.1.2.141) ; extra == 'and-cuda'",
-                "nvidia-nccl-cu12 (==2.16.5) ; extra == 'and-cuda'",
-                "nvidia-nvjitlink-cu12 (==12.2.140) ; extra == 'and-cuda'",
-                "tensorrt (==8.6.1.post1) ; extra == 'and-cuda'",
-                "tensorrt-bindings (==8.6.1) ; extra == 'and-cuda'",
-                "tensorrt-libs (==8.6.1) ; extra == 'and-cuda'",
-            ],
+            requirements=[],
             description_content_type="text/markdown",
         )
 

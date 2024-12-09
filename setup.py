@@ -61,7 +61,7 @@ setup(
     },
     install_requires=[
         "numpy",
-        "Orange3",
+        "Orange3>=3.34.0",
         "aif360>=0.6.0",
     ],
     extras_require={

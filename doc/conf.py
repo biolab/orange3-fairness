@@ -291,3 +291,6 @@ texinfo_documents = [
 # Mapping for external documentation in Sphinx.
 # intersphinx_mapping = {'orange3': ('../../orange3/doc/visual-programming/build/html',
 #                                   '../../orange3/doc/visual-programming/build/html/objects.inv')}
+
+# avoid encoding error with htmlhelp
+smartquotes = False

@@ -2,6 +2,7 @@
 This module contains the OWAdversarialDebiasing widget.
 """
 
+import platform
 import sys
 from itertools import chain
 
@@ -244,10 +245,17 @@ class OWAdversarialDebiasing(ConcurrentWidgetMixin, OWBaseLearner):
         """
         Installs tensorflow
         """
+        # 2.19.1 is the newest version available on conda-forge on 20260717
+        # 2.18.0 is the version that works on Python 3.12 and works on Github actions
+        # 2.14.0 the last version on tensorflow for conda-forge for Windows
+        # 2.18.0 was tested before with our Windows package, so keep that for safety for older Python
+        version = "2.18.0" \
+            if sys.platform == "win32" and platform.python_version_tuple() < ('3', '13') \
+            else "2.19.1"
 
         installable = Installable(
             name="tensorflow-cpu" if sys.platform == "win32" else "tensorflow",
-            version="2.18.0",  # 2.18.0 works on Github actions and is available on conda on 20250714
+            version=version,
             summary="TensorFlow is an open source machine learning framework for everyone.",
             description="TensorFlow is an open source software library for high performance numerical\ncomputation. Its flexible architecture allows easy deployment of computation\nacross a variety of platforms (CPUs, GPUs, TPUs), and from desktops to clusters\nof servers to mobile and edge devices.\n\nOriginally developed by researchers and engineers from the Google Brain team\nwithin Google's AI organization, it comes with strong support for machine\nlearning and deep learning and the flexible numerical computation core is used\nacross many other scientific domains. TensorFlow is licensed under [Apache\n2.0](https://github.com/tensorflow/tensorflow/blob/master/LICENSE).\n",
             package_url="https://pypi.org/project/tensorflow/",
